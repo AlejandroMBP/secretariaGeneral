@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\RolesPermisosController;
 use App\Http\Controllers\userController;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,10 @@ Route::put('/roles/{role}', [RolesPermisosController::class, 'update'])->name('r
 Route::delete('/roles/destroy/{role}', [RolesPermisosController::class, 'destroy'])->name('roles.destroy');
 
 Route::post('/roles/{role}/permissions', [RolesPermisosController::class, 'assignPermissions'])->name('roles.assignPermissions');
+
+Route::get('/documentos', [DocumentoController::class, 'index'])->name('documento.index');
+Route::post('/cargar-pdf', [DocumentoController::class, 'cargar'])->name('documento.cargar');
+Route::get('/orcimagen', [DocumentoController::class, 'imagenOCR'])->name('documento.imagenOCR');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

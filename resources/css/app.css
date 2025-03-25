@@ -68,6 +68,7 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+
     *,
     ::after,
     ::before,
@@ -156,4 +157,19 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+/* Estilo de Toastify */
+.Toastify__toast--success {
+    background-color: #28a745 !important;
+    /* Verde éxito */
+    color: white !important;
+    font-weight: bold;
+}
+
+.Toastify__toast--error {
+    background-color: #dc3545 !important;
+    /* Rojo error */
+    color: white !important;
+    font-weight: bold;
 }

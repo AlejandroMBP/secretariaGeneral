@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Carga de documentos',
-        href: '',
+        href: '/documentos',
         icon: Folder,
     },
 ];
