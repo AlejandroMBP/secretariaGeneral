@@ -15,12 +15,13 @@ export interface NavGroup {
     items: NavItem[];
 }
 
-export interface NavItem {
+export type NavItem = {
     title: string;
-    href: string;
-    icon?: LucideIcon | null;
-    isActive?: boolean;
-}
+    href?: string;
+    icon?: React.ElementType;
+    children?: { title: string; href: string; icon?: React.ElementType }[]; // Permitir submenús opcionales
+};
+
 
 export interface SharedData {
     name: string;
