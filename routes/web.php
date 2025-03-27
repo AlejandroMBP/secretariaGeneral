@@ -3,11 +3,12 @@
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\RolesPermisosController;
 use App\Http\Controllers\userController;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Redirect()->route('login');
 })->name('home');
 
 Route::get('/usuarios', [userController::class, 'index'])->name('usuario.index');
@@ -26,6 +27,7 @@ Route::get('/documentos', [DocumentoController::class, 'index'])->name('document
 Route::post('/cargar-pdf', [DocumentoController::class, 'cargar'])->name('documento.cargar');
 Route::get('/orcimagen', [DocumentoController::class, 'imagenOCR'])->name('documento.imagenOCR');
 
+Route::get('/documentos-listar', [DocumentoController::class, 'listar'])->name('documentos.listar');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

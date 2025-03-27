@@ -28,7 +28,6 @@ class DocumentoController extends Controller
             // Guardar archivo en storage/app/public/documentos
             $ruta = $file->store('documentos', 'public');
 
-            // Guardar en la base de datos
             $documento = Documento::create([
                 'nombre' => $file->getClientOriginalName(),
                 'ruta' => $ruta,
@@ -41,7 +40,6 @@ class DocumentoController extends Controller
             $pdf = $parser->parseFile(storage_path("app/public/$ruta"));
             $textoExtraido = trim($pdf->getText());
 
-            // Si el PDF tiene texto, lo guardamos
             if (!empty($textoExtraido)) {
                 DocumentoTexto::create([
                     'documento_id' => $documento->id,
@@ -51,7 +49,6 @@ class DocumentoController extends Controller
                 // Si el PDF no tiene texto, usar OCR
                 $textoOCR = $this->extraerTextoOCR($ruta);
 
-                // Verificamos si la extracción fue exitosa antes de insertar en la base de datos
                 if (!empty($textoOCR)) {
                     DocumentoTexto::create([
                         'documento_id' => $documento->id,
@@ -65,7 +62,6 @@ class DocumentoController extends Controller
 
             return response()->json([
                 'mensaje' => 'Archivo guardado y texto extraído correctamente.',
-                // 'ruta' => asset("storage/$ruta"),
             ]);
         }
 
@@ -74,59 +70,72 @@ class DocumentoController extends Controller
 
 
     private function extraerTextoOCR($rutaArchivo)
-    {
-        $rutaCompletaPdf = storage_path('app/public/' . $rutaArchivo); // Debería ser así
+{
+    $rutaCompletaPdf = storage_path('app/public/' . $rutaArchivo);
 
-        if (!file_exists($rutaCompletaPdf)) {
-            Log::error("El archivo PDF no existe en: " . $rutaCompletaPdf);
-            return ''; // Retorna un string vacío en lugar de una respuesta JSON
-        }
-
-        // Directorio donde guardaremos las imágenes
-        $directorioImagenes = public_path('pdf_images');
-        if (!file_exists($directorioImagenes)) {
-            mkdir($directorioImagenes, 0777, true);
-        }
-
-        try {
-            // Usando Ghostscript para convertir el PDF a imágenes en Windows
-            $gsPath = '"C:\Program Files\gs\gs10.05.0\bin\gswin64c.exe"';
-            $cmd = "$gsPath -sDEVICE=pngalpha -sOutputFile=$directorioImagenes/pagina.png -r400x400 $rutaCompletaPdf";
-
-            // Ejecutamos el comando de Ghostscript
-            $output = null;
-            $resultCode = null;
-            exec($cmd, $output, $resultCode);
-
-            if ($resultCode !== 0) {
-                Log::error('Error al ejecutar Ghostscript: ' . implode("\n", $output));
-                return ''; // Retorna un string vacío en caso de error
-            }
-
-            // Ahora, extraemos el texto con Tesseract
-            $textoExtraido = "";
-            // Aquí, asumiendo que Ghostscript ha generado las imágenes correctamente
-            foreach (glob("$directorioImagenes/pagina*.png") as $nombreImagen) {
-                // Extraer texto con Tesseract
-                $tesseract = new TesseractOCR($nombreImagen);
-                $tesseract->lang('spa');
-                $tesseract->tessdataDir('C:\Program Files\Tesseract-OCR\tessdata');
-                $tesseract->executable('C:\Program Files\Tesseract-OCR\tesseract.exe');
-
-                $textoExtraido .= $tesseract->run() . "\n\n"; // Concatenar texto de cada página
-            }
-
-            Log::debug("Texto extraído del PDF: " . $textoExtraido);
-
-            // Retornar el texto extraído para que pueda ser insertado en la base de datos
-            return $textoExtraido;
-        } catch (\Exception $e) {
-            Log::error('Error procesando el PDF: ' . $e->getMessage());
-            return ''; // Retorna un string vacío en caso de error
-        }
+    if (!file_exists($rutaCompletaPdf)) {
+        Log::error("El archivo PDF no existe en: " . $rutaCompletaPdf);
+        return '';
     }
 
+    // Directorio donde guardaremos las imágenes
+    $directorioImagenes = public_path('pdf_images');
+    if (!file_exists($directorioImagenes)) {
+        mkdir($directorioImagenes, 0777, true);
+    }
 
+    try {
+        $textoExtraido = "";
+        $output = null;
+        $resultCode = null;
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            // Configuración para Windows
+            $gsPath = '"C:\Program Files\gs\gs10.05.0\bin\gswin64c.exe"';
+            $tesseractPath = 'C:\Program Files\Tesseract-OCR\tesseract.exe';
+            $tessdataPath = 'C:\Program Files\Tesseract-OCR\tessdata';
+
+            $cmd = "$gsPath -sDEVICE=pngalpha -sOutputFile=$directorioImagenes/pagina%d.png -r400x400 $rutaCompletaPdf";
+        } else {
+            // Configuración para Linux (Debian 12)
+            $gsPath = 'gs';
+            $tesseractPath = 'tesseract';
+
+            $cmd = "$gsPath -sDEVICE=pngalpha -o $directorioImagenes/pagina%d.png -r400x400 $rutaCompletaPdf";
+        }
+
+        // Ejecutamos Ghostscript
+        exec($cmd, $output, $resultCode);
+        if ($resultCode !== 0) {
+            Log::error('Error al ejecutar Ghostscript: ' . implode("\n", $output));
+            return '';
+        }
+
+        // Extraer texto con Tesseract OCR
+        foreach (glob("$directorioImagenes/pagina*.png") as $nombreImagen) {
+            $tesseract = new TesseractOCR($nombreImagen);
+            $tesseract->lang('spa');
+
+            if (PHP_OS_FAMILY === 'Windows') {
+                $tesseract->tessdataDir($tessdataPath);
+                $tesseract->executable($tesseractPath);
+            }
+
+            $textoExtraido .= $tesseract->run() . "\n\n";
+        }
+
+        Log::debug("Texto extraído del PDF: " . $textoExtraido);
+
+        return $textoExtraido;
+    } catch (\Exception $e) {
+        Log::error('Error procesando el PDF: ' . $e->getMessage());
+        return '';
+    }
+}
+
+
+// esta funcion se puede usar para cuando queramos cargar imagenes directamente
+// no esta en uso
     public function imagenOCR()
     {
         $rutaImagen = public_path('image/image.png');
@@ -148,4 +157,13 @@ class DocumentoController extends Controller
             Log::error('Error en Tesseract: ' . $e->getMessage());
         }
     }
+    public function listar()
+    {
+        $documentos = Documento::with('usuario')->latest()->get();
+
+        return Inertia::render('Documentos/Listar', [
+            'documentos' => $documentos
+        ]);
+    }
 }
+

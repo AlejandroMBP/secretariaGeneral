@@ -26,11 +26,27 @@ class userController extends Controller
     {
         // Validación
         $request->validate([
-            'name' => 'required|string|max:225',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|min:6',
-            'role_id' => 'required|exists:roles,id', // Validar que el role_id existe
+            'name' => ['required', 'string', 'max:225'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'min:6'],
+            'role_id' => ['required', 'exists:roles,id'],
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+            'name.max' => 'El nombre no puede tener más de 225 caracteres.',
+
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico debe ser una dirección válida.',
+            'email.max' => 'El correo electrónico no puede superar los 255 caracteres.',
+            'email.unique' => 'Este correo electrónico ya está registrado.',
+
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+
+            'role_id.required' => 'El rol es obligatorio.',
+            'role_id.exists' => 'El rol seleccionado no es válido.',
         ]);
+
 
         // Crear el usuario
         $user = User::create([
@@ -41,7 +57,7 @@ class userController extends Controller
 
         $role = Role::find($request->role_id);
 
-        $user->assignRole($role->name); // Asignar el nombre del rol
+        $user->assignRole($role->name);
 
         // Redirigir con éxito
         return redirect()->route('usuario.index')->with('success', 'Usuario creado satisfactoriamente');
@@ -52,9 +68,20 @@ class userController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'role_id' => 'required|exists:roles,id', // Validación para asegurar que el rol existe
+            'role_id' => ['required', 'exists:roles,id'],
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+            'name.max' => 'El nombre no puede tener más de 255 caracteres.',
+
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico debe ser una dirección válida.',
+            'email.unique' => 'Este correo electrónico ya está registrado por otro usuario.',
+
+            'role_id.required' => 'El rol es obligatorio.',
+            'role_id.exists' => 'El rol seleccionado no es válido.',
         ]);
 
         // Actualizar los datos del usuario

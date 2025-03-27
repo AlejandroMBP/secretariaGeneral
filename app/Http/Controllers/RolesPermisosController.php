@@ -18,7 +18,14 @@ class RolesPermisosController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|unique:roles,name']);
+        $request->validate([
+            'name' => ['required', 'unique:roles,name', 'regex:/^[a-zA-Z0-9\s]+$/'],
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.unique' => 'El nombre del rol ya existe.',
+            'name.regex' => 'El nombre solo puede contener letras, números y espacios.',
+        ]);
+
         $role = Role::create(['name' => $request->name]);
 
         if ($request->permissions) {

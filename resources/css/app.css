@@ -68,7 +68,6 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-
     *,
     ::after,
     ::before,
@@ -159,17 +158,15 @@
     }
 }
 
-/* Estilo de Toastify */
-.Toastify__toast--success {
-    background-color: #28a745 !important;
-    /* Verde éxito */
-    color: white !important;
-    font-weight: bold;
+@keyframes spinY {
+    0% {
+        transform: rotateY(0deg);
+    }
+    100% {
+        transform: rotateY(360deg);
+    }
 }
 
-.Toastify__toast--error {
-    background-color: #dc3545 !important;
-    /* Rojo error */
-    color: white !important;
-    font-weight: bold;
+.animate-spin-slow {
+    animation: spinY 4s linear infinite;
 }

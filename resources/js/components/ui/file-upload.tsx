@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
@@ -37,11 +37,10 @@ export const FileUpload = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const handleFileChange = (newFiles: File[]) => {
+    const handleFileChange = useCallback((newFiles: File[]) => {
         setFiles([newFiles[0]]);
-        onChange && onChange(newFiles);
-        console.log(newFiles);
-    };
+        onChange?.(newFiles);
+    }, [onChange]);
 
     const handleClick = () => {
         fileInputRef.current?.click();
@@ -59,37 +58,32 @@ export const FileUpload = ({
         },
     });
 
-    const handleUpload = async () => {
+    const handleUpload = useCallback(async () => {
         if (files.length === 0) {
             setAlert({ message: "No file selected", type: "error" });
             return;
         }
 
-        const formData = new FormData();
-        formData.append("file", files[0]);
         setIsUploading(true);
         NProgress.start();
-        try {
-            const response = await axios.post("/cargar-pdf", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
 
+        try {
+            const formData = new FormData();
+            formData.append("file", files[0]);
+
+            const response = await axios.post("/cargar-pdf", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
             });
 
-            console.log("Archivo subido correctamente:", response.data);
             setAlert({ message: response.data.mensaje || 'Archivo subido correctamente.', type: "success" });
         } catch (error: unknown) {
-            if (axios.isAxiosError(error)) {
-                setAlert({ message: `Error al subir el archivo: ${error.response?.data?.message || error.message}`, type: "error" });
-            } else {
-                setAlert({ message: 'Ocurrió un error desconocido.', type: "error" });
-            }
+            setAlert({ message: 'Ocurrió un error al subir el archivo.', type: "error" });
         } finally {
             setIsUploading(false);
             NProgress.done();
         }
-    };
+    }, [files]);
+
 
     return (
         <div className="w-full" {...getRootProps()}>
@@ -106,7 +100,7 @@ export const FileUpload = ({
             <motion.div
                 onClick={handleClick}
                 whileHover="animate"
-                className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden bg-blue-950"
+                className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
             >
                 <input
                     ref={fileInputRef}
@@ -121,10 +115,10 @@ export const FileUpload = ({
                 </div>
                 <div className="flex flex-col items-center justify-center">
                     <p className="relative z-20 font-sans font-bold text-neutral-700 dark:text-neutral-300 text-base">
-                        Upload file
+                        Subir archivos
                     </p>
                     <p className="relative z-20 font-sans font-normal text-neutral-400 dark:text-neutral-400 text-base mt-2">
-                        Drag or drop your files here or click to upload
+                        Arrastre o suelte sus archivos aquí o haga clic para cargarlos
                     </p>
                     <div className="relative w-full mt-10 max-w-xl mx-auto">
                         {files.length > 0 && (
@@ -234,24 +228,14 @@ export const FileUpload = ({
 };
 
 export function GridPattern() {
-    const columns = 41;
-    const rows = 11;
-
     return (
-        <div className="flex bg-cyan-300 dark:bg-neutral-900 shrink-0 flex-wrap justify-center items-center gap-x-px gap-y-px scale-105">
-            {Array.from({ length: rows }).map((_, row) =>
-                Array.from({ length: columns }).map((_, col) => {
-                    const index = row * columns + col;
-                    return (
-                        <div
-                            key={`${col}-${row}`}
-                            className={`w-10 h-10 flex shrink-0 rounded-[2px] ${index % 2 === 0
-                                ? "bg-cyan-400 dark:bg-cyan-800"
-                                : "bg-white dark:bg-neutral-950 shadow-[0px_0px_1px_3px_rgba(255,255,255,1)_inset] dark:shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"}`} />
-                    );
-                })
-            )}
-        </div>
+    <div
+    className="w-full h-full bg-gradient-to-r from-gray-300 to-gray-500 dark:from-blue-900 dark:to-blue-700"
+    >
+    </div>
+
+
     );
 }
+
 
