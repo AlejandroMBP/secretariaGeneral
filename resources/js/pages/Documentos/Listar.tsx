@@ -10,10 +10,12 @@ interface Documento {
         name: string;
     };
     created_at: string;
+    ruta: string;
 }
 
 interface Props {
     documentos: Documento[];
+    [key: string]: any;
 }
 
 export default function Listar() {
@@ -43,7 +45,6 @@ export default function Listar() {
                         <TableBody>
                             {documentos.map((doc, index) => (
                                 <TableRow key={doc.id}>
-                                    {/* Muestra el número correlativo, comenzando desde 1 */}
                                     <TableCell>{index + 1}</TableCell>
                                     <TableCell>{doc.nombre}</TableCell>
                                     <TableCell>{doc.tipo}</TableCell>

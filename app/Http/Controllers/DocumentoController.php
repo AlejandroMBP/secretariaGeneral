@@ -5,12 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Documento;
 use App\Models\DocumentoTexto;
 use Smalot\PdfParser\Parser;
-// use Spatie\PdfToImage\Pdf;
-// use thiagoalessio\TesseractOCR\TesseractOCR;
 use Illuminate\Support\Facades\Auth;
 use thiagoalessio\TesseractOCR\TesseractOCR;
 
@@ -166,4 +163,3 @@ class DocumentoController extends Controller
         ]);
     }
 }
-

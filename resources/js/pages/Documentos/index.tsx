@@ -1,4 +1,5 @@
-import { FileUpload } from '@/components/ui/file-upload';
+import { ProfileForm } from '@/components/formulario';
+import { PdfUpload } from '@/components/propios/inputFile';
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import 'nprogress/nprogress.css';
@@ -19,8 +20,12 @@ export default function UsuarioIndex() {
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Administración de Documentos</h1>
                     <p className="mt-2 text-gray-600 dark:text-gray-300">Puedes carfar los documentos</p>
                 </div>
+                <div>
+                    <ProfileForm />
+                </div>
                 <div className="dark:bg-sidebar rounded-xl bg-white p-6 shadow-md">
-                    <FileUpload onChange={handleFileUpload} />
+                    <PdfUpload />
+                    {/* <FileUpload onChange={handleFileUpload} /> */}
                 </div>
             </div>
         </AppLayout>
