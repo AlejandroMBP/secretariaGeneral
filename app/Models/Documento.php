@@ -12,11 +12,15 @@ class Documento extends Model
     protected $table = 'documentos';
 
     protected $fillable = [
-        'nombre',
-        'ruta',
-        'tipo',
-        'usuario_id',
+        'nombre_del_documento',
+        'ruta_de_guardado',
+        'tipo_documento_id',
+        'lo_que_resuelve',
+        'tipo_archivo',
+        'gestion_',
+        'usuario_id'
     ];
+    protected $dates = ['deleted_at'];
 
     /**
      * Relación con el usuario que subió el documento.
@@ -29,6 +33,11 @@ class Documento extends Model
     /**
      * Relación con los textos extraídos del documento.
      */
+    public function tipoDocumento()
+    {
+        return $this->belongsTo(TipoDocumento::class, 'tipo_documento_id');
+    }
+
     public function textos()
     {
         return $this->hasMany(DocumentoTexto::class, 'documento_id');

@@ -22,4 +22,17 @@ export default defineConfig({
             'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
         },
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'pdf-worker': ['pdfjs-dist/build/pdf.worker.min.mjs'],
+                },
+            },
+        },
+    },
+    optimizeDeps: {
+        include: ['pdfjs-dist'],
+        exclude: ['pdfjs-dist/build/pdf.worker.min.mjs'],
+    },
 });

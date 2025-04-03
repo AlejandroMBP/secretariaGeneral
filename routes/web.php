@@ -26,8 +26,11 @@ Route::post('/roles/{role}/permissions', [RolesPermisosController::class, 'assig
 Route::get('/documentos', [DocumentoController::class, 'index'])->name('documento.index');
 Route::post('/cargar-pdf', [DocumentoController::class, 'cargar'])->name('documento.cargar');
 Route::get('/orcimagen', [DocumentoController::class, 'imagenOCR'])->name('documento.imagenOCR');
-
+Route::post('/documentos/preprocesar', [DocumentoController::class, 'preprocesarArchivo']);
+Route::post('/documentos/guardar',[DocumentoController::class, 'guardar'])->name('documentos.guardar');
 Route::get('/documentos-listar', [DocumentoController::class, 'listar'])->name('documentos.listar');
+Route::post('/documentos/ver-pdf', [DocumentoController::class, 'agregarMarcaDeAgua'])
+    ->name('documentos.verPDFImagen');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

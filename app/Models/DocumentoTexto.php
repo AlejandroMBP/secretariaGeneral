@@ -15,7 +15,7 @@ class DocumentoTexto extends Model
         'documento_id',
         'texto',
     ];
-
+    protected $dates = ['deleted_at'];
     /**
      * Relación con el documento al que pertenece el texto extraído.
      */

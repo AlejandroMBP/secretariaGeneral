@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('documentos_textos', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('documento_id');  // Relación con el archivo PDF
-            $table->text('texto');  // El texto extraído del documento
+            $table->unsignedBigInteger('documento_id');
+            $table->text('texto');
             $table->timestamps();
+            $table->softDeletes();
             $table->foreign('documento_id')->references('id')->on('documentos')->onDelete('cascade');
         });
     }

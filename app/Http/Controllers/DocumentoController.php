@@ -7,153 +7,370 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Models\Documento;
 use App\Models\DocumentoTexto;
+use App\Models\TipoDocumento;
 use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use thiagoalessio\TesseractOCR\TesseractOCR;
+use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
+use setasign\Fpdi\Fpdi;
+use App\Services\FPDIWithRotate; // Usamos nuestra clase personalizada FPDI con Rotate
+
+use function Psy\debug;
 
 class DocumentoController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Documentos/index');
+        $tipoDocumentos = TipoDocumento::all();
+        return Inertia::render('Documentos/index',[
+            'tipoDocumentos' => $tipoDocumentos,]);
     }
-    public function cargar(Request $request)
+
+    public function guardar(Request $request)
     {
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
+        Log::debug('Datos que llegan: ', $request->all());
+        $request->merge([
+        'usarOCR' => filter_var($request->usarOCR, FILTER_VALIDATE_BOOLEAN),
+        ]);
+        $request->validate([
+            'titulo' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ ,.;!?()]+$/'
+            ],
+            'descripcion' => [
+                'required',
+                'string',
+                'regex:/^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ ,.;!?()]+$/'
+                ],
+            'categoria' => 'required|exists:tipo_documento,id',
+            'fecha' => [
+                'required',
+                'date',
+                'after_or_equal:2000-01-01',
+                'before_or_equal:' . now()->toDateString(),
+                ],
+            'ruta_temporal' => 'required|string',
+            'usarOCR' => 'required|boolean',
+            'texto_extraido' => 'nullable|string',
+            ], [
+            'titulo.required' => 'El título del documento es obligatorio.',
+            'titulo.string' => 'El título debe ser un texto.',
+            'titulo.max' => 'El título no puede superar los 255 caracteres.',
+            'titulo.regex' => 'El título solo puede contener letras, números, acentos, comas, puntos, y otros caracteres especiales como !, ?, (), etc.',
 
-            // Guardar archivo en storage/app/public/documentos
-            $ruta = $file->store('documentos', 'public');
+            'descripcion.required' => 'La descripción del documento es obligatoria.',
+            'descripcion.string' => 'La descripción debe ser un texto.',
+            'descripcion.regex' => 'La descripción solo puede contener letras, números, acentos, comas, puntos, y otros caracteres especiales como !, ?, (), etc.',
 
-            $documento = Documento::create([
-                'nombre' => $file->getClientOriginalName(),
-                'ruta' => $ruta,
-                'tipo' => $file->getClientOriginalExtension(),
-                'usuario_id' => Auth::id(),
-            ]);
+            'categoria.required' => 'La categoría del documento es obligatoria.',
+            'categoria.exists' => 'La categoría seleccionada no es válida.',
 
-            // Intentar extraer texto con Smalot PDF Parser
-            $parser = new Parser();
-            $pdf = $parser->parseFile(storage_path("app/public/$ruta"));
-            $textoExtraido = trim($pdf->getText());
+            'fecha.required' => 'La fecha es obligatoria.',
+            'fecha.date' => 'La fecha debe ser válida.',
+            'fecha.after_or_equal' => 'La fecha no puede ser anterior al 1 de enero de 2000.',
+            'fecha.before_or_equal' => 'La fecha no puede ser posterior a la fecha actual.',
 
-            if (!empty($textoExtraido)) {
+            'ruta_temporal.required' => 'La ruta del archivo es obligatoria.',
+            'ruta_temporal.string' => 'La ruta del archivo debe ser un texto.',
+
+            'usarOCR.required' => 'Debe indicar si desea usar OCR.',
+            'usarOCR.boolean' => 'El valor de OCR debe ser verdadero o falso.',
+
+            'texto_extraido.string' => 'El texto extraído debe ser un texto válido.',
+        ]);
+
+        Log::debug('Datos validados:', $request->all());
+        try {
+               // Guardar el documento
+            $documento = new Documento();
+            $documento->nombre_del_documento = $request->titulo;
+            $documento->ruta_de_guardado = $request->ruta_temporal;
+            $documento->tipo_documento_id = $request->categoria;
+            $documento->lo_que_resuelve = $request->descripcion;
+            $documento->tipo_archivo = 'pdf'; // Asegúrate de asignar el tipo de archivo correcto
+            $documento->gestion_ = $request->fecha; // Aquí pon el valor que corresponda
+            $documento->usuario_id = Auth::id(); // O el ID del usuario actual
+            $documento->save();
+               // Guardar el texto extraído en la tabla documentos_textos
+            if ($request->texto_extraido) {
                 DocumentoTexto::create([
                     'documento_id' => $documento->id,
-                    'texto' => $textoExtraido,
+                    'texto' => $request->texto_extraido,
                 ]);
-            } else {
-                // Si el PDF no tiene texto, usar OCR
-                $textoOCR = $this->extraerTextoOCR($ruta);
+            }
+            return response()->json(['message' => 'Documento guardado exitosamente'], 200);
+        } catch (\Exception $e) {
+            Log::error('Error al guardar el documento: ', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Error al guardar el documento'], 500);
+        }
+    }
 
-                if (!empty($textoOCR)) {
-                    DocumentoTexto::create([
-                        'documento_id' => $documento->id,
-                        'texto' => $textoOCR,
-                    ]);
-                } else {
-                    Log::error('No se pudo extraer texto del PDF ni con OCR.');
-                    return response()->json(['error' => 'No se pudo extraer texto del PDF'], 500);
-                }
+    public function preprocesarArchivo(Request $request)
+    {
+        Log::debug('Archivo recibido para preprocesamiento: ', $request->all());
+
+        if (!$request->hasFile('archivo')) {
+            return response()->json(['error' => 'No se recibió ningún archivo.'], 400);
+        }
+
+        $file = $request->file('archivo');
+        $rutaTemporal = $file->store('documentos_temporales', 'public');
+        $rutaCompletaPdf = storage_path("app/public/$rutaTemporal");
+
+        try {
+            $parser = new Parser();
+            $pdf = $parser->parseFile(storage_path("app/public/$rutaTemporal"));
+            $textoExtraido = trim($pdf->getText());
+
+            if (strlen($textoExtraido) < 5) {
+                Log::info("Texto insuficiente con Smalot, usando OCR con Tesseract.");
+                $textoOCR = $this->extraerTextoOCR($rutaTemporal);
+                $textoCorregido = $this->corregirTextoHunspell($textoOCR);
+
+                // $exactitudOCR = $this->calcularCalidadOCR($textoOCR, $textoCorregido);
+                // $eficienciaOCR = $this->estimarEficienciaOCR($textoOCR, $rutaCompletaPdf);
+                // $exactitudFinal = ($exactitudOCR + $eficienciaOCR) / 2;
+
+                $falloOCR = $this->calcularFalloOCR($textoOCR, $textoCorregido);
+                $falloEficiencia = $this->estimarFalloOCR($textoOCR, $rutaCompletaPdf);
+                $falloFinal = ($falloOCR + $falloEficiencia) / 2;
+                return response()->json([
+                    'mensaje' => 'Texto extraído con OCR.',
+                    'metodo_usado' => 'OCR (Tesseract)',
+                    'texto_extraido' => $textoOCR,
+                    'porcentaje_fallo' => round($falloFinal, 2) . '%',
+                    'ruta_temporal' => $rutaTemporal,
+                ]);
             }
 
+            // $exactitudSmalot = strlen($textoExtraido) > 0 ? 100 : 0;
+            $falloSmalot = 0;
             return response()->json([
-                'mensaje' => 'Archivo guardado y texto extraído correctamente.',
+                'mensaje' => 'Texto extraído con Smalot/PdfParser.',
+                'metodo_usado' => 'Smalot/PdfParser',
+                'texto_extraido' => $textoExtraido,
+                'porcentaje_fallo' => round($falloSmalot, 2) . '%',
+                'ruta_temporal' => $rutaTemporal,
             ]);
+        } catch (\Exception $e) {
+            Log::error('Error procesando el archivo: ' . $e->getMessage());
+            return response()->json(['error' => 'Error interno al procesar el archivo.'], 500);
         }
-
-        return response()->json(['error' => 'No se recibió ningún archivo.'], 400);
     }
-
 
     private function extraerTextoOCR($rutaArchivo)
-{
-    $rutaCompletaPdf = storage_path('app/public/' . $rutaArchivo);
+    {
+        $rutaCompletaPdf = storage_path('app/public/' . $rutaArchivo);
 
-    if (!file_exists($rutaCompletaPdf)) {
-        Log::error("El archivo PDF no existe en: " . $rutaCompletaPdf);
-        return '';
-    }
-
-    // Directorio donde guardaremos las imágenes
-    $directorioImagenes = public_path('pdf_images');
-    if (!file_exists($directorioImagenes)) {
-        mkdir($directorioImagenes, 0777, true);
-    }
-
-    try {
-        $textoExtraido = "";
-        $output = null;
-        $resultCode = null;
-
-        if (PHP_OS_FAMILY === 'Windows') {
-            // Configuración para Windows
-            $gsPath = '"C:\Program Files\gs\gs10.05.0\bin\gswin64c.exe"';
-            $tesseractPath = 'C:\Program Files\Tesseract-OCR\tesseract.exe';
-            $tessdataPath = 'C:\Program Files\Tesseract-OCR\tessdata';
-
-            $cmd = "$gsPath -sDEVICE=pngalpha -sOutputFile=$directorioImagenes/pagina%d.png -r400x400 $rutaCompletaPdf";
-        } else {
-            // Configuración para Linux (Debian 12)
-            $gsPath = 'gs';
-            $tesseractPath = 'tesseract';
-
-            $cmd = "$gsPath -sDEVICE=pngalpha -o $directorioImagenes/pagina%d.png -r400x400 $rutaCompletaPdf";
-        }
-
-        // Ejecutamos Ghostscript
-        exec($cmd, $output, $resultCode);
-        if ($resultCode !== 0) {
-            Log::error('Error al ejecutar Ghostscript: ' . implode("\n", $output));
+        if (!file_exists($rutaCompletaPdf)) {
+            Log::error("El archivo PDF no existe en: " . $rutaCompletaPdf);
             return '';
         }
 
-        // Extraer texto con Tesseract OCR
-        foreach (glob("$directorioImagenes/pagina*.png") as $nombreImagen) {
+        $directorioImagenes = public_path('pdf_images');
+        if (!file_exists($directorioImagenes)) {
+            mkdir($directorioImagenes, 0777, true);
+        }
+
+        try {
+            // Convertir PDF a imágenes con Ghostscript
+            $this->convertirPdfAImagenes($rutaCompletaPdf, $directorioImagenes);
+
+            // Extraer texto de imágenes con OCR
+            $textoExtraido = $this->procesarImagenesOCR($directorioImagenes);
+
+            //Aplicar correccion ortografica con huspell
+            $textoCorregido = $this->corregirTextoHunspell($textoExtraido);
+
+            // Limpiar imágenes después del procesamiento
+            $this->limpiarImagenesTemporales($directorioImagenes);
+
+            return $textoExtraido;
+        } catch (\Exception $e) {
+            Log::error('Error procesando el PDF: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    private function convertirPdfAImagenes($rutaPdf, $directorioImagenes)
+    {
+        $output = null;
+        $resultCode = null;
+
+        $gsPath = PHP_OS_FAMILY === 'Windows' ? '"C:\\Program Files\\gs\\gs10.05.0\\bin\\gswin64c.exe"' : 'gs';
+
+        // Convertir PDF a imágenes TIFF con compresión CCITT Group 4 (ideal para OCR)
+        $cmd = "$gsPath -sDEVICE=tiffg4 -o $directorioImagenes/pagina%d.tiff -r600x600 $rutaPdf";
+
+        exec($cmd, $output, $resultCode);
+        if ($resultCode !== 0) {
+            throw new \Exception('Error al ejecutar Ghostscript: ' . implode("\n", $output));
+        }
+    }
+
+    private function procesarImagenesOCR($directorioImagenes)
+    {
+        $textoExtraido = "";
+
+        foreach (glob("$directorioImagenes/pagina*.tiff") as $nombreImagen) {
             $tesseract = new TesseractOCR($nombreImagen);
             $tesseract->lang('spa');
 
             if (PHP_OS_FAMILY === 'Windows') {
-                $tesseract->tessdataDir($tessdataPath);
-                $tesseract->executable($tesseractPath);
+                $tesseract->tessdataDir('C:\\Program Files\\Tesseract-OCR\\tessdata');
+                $tesseract->executable('C:\\Program Files\\Tesseract-OCR\\tesseract.exe');
             }
 
             $textoExtraido .= $tesseract->run() . "\n\n";
         }
 
-        Log::debug("Texto extraído del PDF: " . $textoExtraido);
-
         return $textoExtraido;
-    } catch (\Exception $e) {
-        Log::error('Error procesando el PDF: ' . $e->getMessage());
-        return '';
     }
-}
 
-
-// esta funcion se puede usar para cuando queramos cargar imagenes directamente
-// no esta en uso
-    public function imagenOCR()
+    private function mejorarImagenOCR($nombreImagen)
     {
-        $rutaImagen = public_path('image/image.png');
+        $output = null;
+        $resultCode = null;
+        $cmdImageMagick = "convert $nombreImagen -sharpen 0x1 -resize 1024x1024 -quality 90 $nombreImagen";
 
-        if (!file_exists($rutaImagen)) {
-            Log::error("La imagen no existe en: " . $rutaImagen);
-            return response()->json(['error' => 'La imagen no existe en la ruta especificada'], 404);
-        }
-
-        try {
-            $texto = (new TesseractOCR($rutaImagen))
-                ->lang('spa')
-                ->tessdataDir('C:\Program Files\Tesseract-OCR\tessdata')
-                ->executable('C:\Program Files\Tesseract-OCR\tesseract.exe')
-                ->run();
-
-            Log::debug('Texto extraído: ' . $texto);
-        } catch (\Exception $e) {
-            Log::error('Error en Tesseract: ' . $e->getMessage());
+        exec($cmdImageMagick, $output, $resultCode);
+        if ($resultCode !== 0) {
+            Log::error("Error al limpiar imagen con ImageMagick: " . implode("\n", $output));
         }
     }
+
+    private function limpiarImagenesTemporales($directorioImagenes)
+    {
+        foreach (glob("$directorioImagenes/pagina*.png") as $nombreImagen) {
+            unlink($nombreImagen);
+        }
+    }
+    private function corregirTextoHunspell($texto)
+    {
+        $diccionario = '/usr/share/hunspell/es_ES.dic'; // Asegúrate de tener el diccionario instalado
+        $archivoTemporal = tempnam(sys_get_temp_dir(), 'hunspell');
+
+        file_put_contents($archivoTemporal, $texto);
+
+        // Ejecutar Hunspell
+        $cmd = "hunspell -d es_ES -a < $archivoTemporal";
+        exec($cmd, $output, $resultCode);
+
+        unlink($archivoTemporal);
+
+        if ($resultCode !== 0) {
+            Log::error("Error en Hunspell: " . implode("\n", $output));
+            return $texto; // Si falla, devolvemos el texto sin corrección
+        }
+
+        // Procesar la salida de Hunspell
+        $textoCorregido = "";
+        foreach ($output as $linea) {
+            if (!empty($linea) && $linea[0] !== '&' && $linea[0] !== '#') {
+                $textoCorregido .= $linea . "\n";
+            }
+        }
+
+        return trim($textoCorregido);
+    }
+    private function calcularCalidadOCR($textoAntes, $textoDespues)
+    {
+        $palabrasAntes = str_word_count($textoAntes);
+        $palabrasDespues = str_word_count($textoDespues);
+        $corregidas = abs($palabrasAntes - $palabrasDespues);
+
+        if ($palabrasAntes == 0) return 0;
+
+        $calidad = (1 - ($corregidas / $palabrasAntes)) * 100;
+        return max(0, $calidad);
+    }
+
+    private function estimarEficienciaOCR($textoExtraido, $rutaPdf)
+    {
+        $caracteresExtraidos = strlen($textoExtraido);
+        $tamanioPdf = filesize($rutaPdf);
+        $estimacionCaracteres = $tamanioPdf / 2;
+
+        $eficiencia = ($caracteresExtraidos / $estimacionCaracteres) * 100;
+        return min(100, max(0, $eficiencia));
+    }
+
+    private function calcularFalloOCR($textoExtraido, $textoCorregido)
+    {
+        $palabrasAntes = str_word_count($textoExtraido);
+        $palabrasDespues = str_word_count($textoCorregido);
+        $corregidas = abs($palabrasAntes - $palabrasDespues);
+
+        if ($palabrasAntes == 0) return 100; // Fallo total si no hay palabras.
+
+        $exactitud = (1 - ($corregidas / $palabrasAntes)) * 100;
+        $fallo = 100 - max(0, $exactitud); // Convertimos exactitud en fallo.
+
+        return round($fallo, 2);
+    }
+
+    private function estimarFalloOCR($textoExtraido, $rutaPdf)
+    {
+        $caracteresExtraidos = strlen($textoExtraido);
+        $tamanioPdf = filesize($rutaPdf);
+        $estimacionCaracteres = $tamanioPdf / 2;
+
+        $eficiencia = ($caracteresExtraidos / $estimacionCaracteres) * 100;
+        $fallo = 100 - min(100, max(0, $eficiencia));
+
+        return round($fallo, 2);
+    }
+    public function agregarMarcaDeAgua(Request $request)
+    {
+        $ruta = $request->input('ruta'); // Ruta del PDF original
+        $archivo = storage_path("app/public/{$ruta}");
+
+        if (!file_exists($archivo)) {
+            return response()->json(['error' => 'El archivo no existe.'], 404);
+        }
+
+        // Crear una nueva instancia de FPDIWithRotate
+        $pdf = new FPDIWithRotate();
+
+        // Cargar el PDF original
+        $pageCount = $pdf->setSourceFile($archivo);
+
+        // Iterar sobre todas las páginas
+        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            // Importar la página
+            $templateId = $pdf->importPage($pageNo);
+
+            // Agregar una página al nuevo archivo PDF
+            $pdf->addPage();
+
+            // Usar el template del PDF original
+            $pdf->useTemplate($templateId);
+
+            // Agregar marca de agua (texto o imagen)
+            $pdf->SetFont('Arial', 'B', 60);
+            $pdf->SetTextColor(0, 0, 0); // Color rojo
+            // $pdf->SetXY(-10, 0); // Posición
+            $pdf->Rotate(55, 150, 220); // Rotar el texto
+            $pdf->Text(60, 150, 'DOCUMENTO SIN VALOR'); // Agregar texto de marca de agua
+
+            // Si quieres usar una imagen de marca de agua, puedes hacerlo así:
+            // $pdf->Image('path_to_watermark_image.png', 50, 100, 100);
+        }
+
+        // Guardar el nuevo archivo PDF con marca de agua
+        $outputPath = storage_path("app/public/pdf_images/ver/") . "documento_con_marca_de_agua.pdf";
+        $pdf->Output('F', $outputPath);
+        // Devolver la URL del nuevo archivo PDF con la marca de agua
+        return response()->json(['url' => Storage::url('pdf_images/ver/documento_con_marca_de_agua.pdf')]);
+    }
+
     public function listar()
     {
         $documentos = Documento::with('usuario')->latest()->get();

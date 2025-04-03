@@ -58,7 +58,6 @@ export function PdfUpload({ onFileChange }: PdfUploadProps) {
             setFileName(null);
             setValue('pdf', null);
             onFileChange?.(null);
-
         } catch (error) {
             setAlert({ message: 'Error al subir el archivo. Intenta nuevamente.', type: 'error' });
         } finally {
@@ -110,14 +109,16 @@ export function PdfUpload({ onFileChange }: PdfUploadProps) {
                         >
                             <UploadCloud className="mb-2 h-20 w-10 text-gray-500" />
                             {selectedFile ? (
-                                <div className={cn(
-                                    'w-full rounded-md border border-gray-300 bg-gray-50 dark:bg-gray-800/80 dark:border-gray-600 p-4 shadow-md transition-opacity duration-500 opacity-100 animate-fadeIn',
-                                    fileName && fileName.length > 20 ? 'max-w-6xl' : 'max-w-xl'
-                                )}>
-                                    <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-gray-700 dark:text-gray-300 text-2xl">
+                                <div
+                                    className={cn(
+                                        'animate-fadeIn w-full rounded-md border border-gray-300 bg-gray-50 p-4 opacity-100 shadow-md transition-opacity duration-500 dark:border-gray-600 dark:bg-gray-800/80',
+                                        fileName && fileName.length > 20 ? 'max-w-6xl' : 'max-w-xl',
+                                    )}
+                                >
+                                    <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-2xl text-gray-700 dark:text-gray-300">
                                         <p>{fileName}</p>
                                         <p className="text-right">
-                                            <strong className="bg-cyan-300 dark:bg-cyan-700 px-2 py-0.5 rounded-md">
+                                            <strong className="rounded-md bg-cyan-300 px-2 py-0.5 dark:bg-cyan-700">
                                                 {(selectedFile.size / 1024).toFixed(2)} KB
                                             </strong>
                                         </p>
@@ -126,13 +127,10 @@ export function PdfUpload({ onFileChange }: PdfUploadProps) {
                                         <p className="text-right">{new Date(selectedFile.lastModified).toLocaleDateString()}</p>
                                     </div>
 
-                                    <p className="text-center mt-2 text-2xl text-green-500">¡Archivo cargado y listo para subir!</p>
+                                    <p className="mt-2 text-center text-2xl text-green-500">¡Archivo cargado y listo para subir!</p>
                                 </div>
-
                             ) : (
-                                <span className="text-sm text-gray-600 dark:text-gray-300">
-                                    Arrastra o selecciona un archivo PDF
-                                </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-300">Arrastra o selecciona un archivo PDF</span>
                             )}
                         </label>
                         <Input id="pdf-upload" type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
@@ -141,7 +139,7 @@ export function PdfUpload({ onFileChange }: PdfUploadProps) {
             />
             {fileName && (
                 <div className="flex items-center gap-2 text-2xl text-gray-900 dark:text-gray-200">
-                    <FileText className="text-gray-900 dark:text-gray-200 h-5 w-5" />
+                    <FileText className="h-5 w-5 text-gray-900 dark:text-gray-200" />
                     {fileName}
                 </div>
             )}
