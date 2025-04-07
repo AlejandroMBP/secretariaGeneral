@@ -68,7 +68,6 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-
     *,
     ::after,
     ::before,
@@ -171,4 +170,45 @@
 
 .animate-spin-slow {
     animation: spinY 4s linear infinite;
+}
+
+/* Estilo para el círculo que sigue al cursor */
+.cursor-follower {
+    position: absolute;
+    pointer-events: none; /* Asegura que el círculo no interfiera con los clics */
+    width: 40px; /* Tamaño del círculo */
+    height: 40px; /* Tamaño del círculo */
+    background-color: rgba(4, 8, 255, 0.5); /* Color del círculo */
+    border-radius: 50%; /* Hace que el círculo sea redondeado */
+    transform: translate(-50%, -50%); /* Centra el círculo en el cursor */
+    transition:
+        width 0.1s,
+        height 0.1s; /* Transición suave para el tamaño */
+    z-index: 50;
+}
+
+/* Para navegadores WebKit (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+    width: 10px; /* Grosor de la barra */
+}
+
+*::-webkit-scrollbar-track {
+    background: #1a1a1a; /* Fondo oscuro elegante */
+    border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #333333; /* Negro grisáceo formal */
+    border-radius: 10px; /* Redondeado pero sin exagerar */
+    border: 2px solid #1a1a1a; /* Para que se vea separado del fondo */
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #555555; /* Un poco más claro al pasar el mouse */
+}
+
+/* Para Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #333333 #1a1a1a;
 }

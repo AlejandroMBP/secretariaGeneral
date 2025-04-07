@@ -18,7 +18,6 @@ export default function Appearance() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Appearance settings" />
-
             <SettingsLayout>
                 <div className="space-y-6">
                     <HeadingSmall title="Configuración de apariencia" description="Actualiza la configuración de apariencia de tu cuenta" />

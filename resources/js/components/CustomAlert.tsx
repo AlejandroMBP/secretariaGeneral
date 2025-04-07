@@ -10,13 +10,12 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ message, type, onClose }) => 
     const [show, setShow] = useState(true);
 
     useEffect(() => {
-        // Cierra la alerta después de 3 segundos (3000 ms)
         const timer = setTimeout(() => {
             setShow(false);
-            setTimeout(onClose, 300); // Llama a onClose después del efecto de desaparición
+            setTimeout(onClose, 300);
         }, 3000);
 
-        return () => clearTimeout(timer); // Limpia el timer si el componente se desmonta
+        return () => clearTimeout(timer);
     }, [onClose]);
 
     const getAlertStyle = () => {
@@ -35,13 +34,17 @@ const CustomAlert: React.FC<CustomAlertProps> = ({ message, type, onClose }) => 
     return (
         show && (
             <div
-                className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg ${getAlertStyle()} z-50
-                    transition-opacity duration-500 ease-in-out opacity-100 transform
-                    ${show ? 'scale-100' : 'scale-95 opacity-0'}`}
+                className={`fixed top-5 right-5 rounded-lg p-4 shadow-lg ${getAlertStyle()} z-50 transform opacity-100 transition-opacity duration-500 ease-in-out ${show ? 'scale-100' : 'scale-95 opacity-0'}`}
             >
                 <div className="flex items-center justify-between">
                     <span>{message}</span>
-                    <button onClick={() => { setShow(false); setTimeout(onClose, 300); }} className="ml-4 text-lg font-bold text-white">
+                    <button
+                        onClick={() => {
+                            setShow(false);
+                            setTimeout(onClose, 300);
+                        }}
+                        className="ml-4 text-lg font-bold text-white"
+                    >
                         &times;
                     </button>
                 </div>

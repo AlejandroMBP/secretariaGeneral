@@ -37,7 +37,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
     return (
         <AuthLayout title="Secretaria general" description="Ingrese sus credenciales para ingresar">
-            {/* <div className="rounded-2xl bg-black p-6"> */}
             <Head title="Inicia sesión" />
 
             <form className="flex flex-col gap-6" onSubmit={submit}>

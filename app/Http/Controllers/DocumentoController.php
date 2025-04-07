@@ -19,7 +19,6 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use setasign\Fpdi\Fpdi;
 use App\Services\FPDIWithRotate; // Usamos nuestra clase personalizada FPDI con Rotate
-
 use function Psy\debug;
 
 class DocumentoController extends Controller
@@ -335,48 +334,97 @@ class DocumentoController extends Controller
         if (!file_exists($archivo)) {
             return response()->json(['error' => 'El archivo no existe.'], 404);
         }
-
-        // Crear una nueva instancia de FPDIWithRotate
         $pdf = new FPDIWithRotate();
-
-        // Cargar el PDF original
         $pageCount = $pdf->setSourceFile($archivo);
-
-        // Iterar sobre todas las páginas
         for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-            // Importar la página
             $templateId = $pdf->importPage($pageNo);
-
-            // Agregar una página al nuevo archivo PDF
             $pdf->addPage();
-
-            // Usar el template del PDF original
             $pdf->useTemplate($templateId);
-
-            // Agregar marca de agua (texto o imagen)
             $pdf->SetFont('Arial', 'B', 60);
-            $pdf->SetTextColor(0, 0, 0); // Color rojo
-            // $pdf->SetXY(-10, 0); // Posición
-            $pdf->Rotate(55, 150, 220); // Rotar el texto
-            $pdf->Text(60, 150, 'DOCUMENTO SIN VALOR'); // Agregar texto de marca de agua
-
-            // Si quieres usar una imagen de marca de agua, puedes hacerlo así:
-            // $pdf->Image('path_to_watermark_image.png', 50, 100, 100);
+            $pdf->SetTextColor(195, 195, 195);
+            $pdf->SetAlpha(0.5,'NORMAL');
+            $pdf->Rotate(55, 150, 220);
+            $pdf->Text(60, 150, 'DOCUMENTO SIN VALOR');
         }
-
-        // Guardar el nuevo archivo PDF con marca de agua
         $outputPath = storage_path("app/public/pdf_images/ver/") . "documento_con_marca_de_agua.pdf";
         $pdf->Output('F', $outputPath);
-        // Devolver la URL del nuevo archivo PDF con la marca de agua
         return response()->json(['url' => Storage::url('pdf_images/ver/documento_con_marca_de_agua.pdf')]);
     }
 
     public function listar()
     {
-        $documentos = Documento::with('usuario')->latest()->get();
-
+        $documentos = Documento::with('usuario','textos')->latest()->get();
         return Inertia::render('Documentos/Listar', [
             'documentos' => $documentos
         ]);
+    }
+    public function editarDocumento(Request $request){
+        Log::debug('lo que se esta editando: ',$request->all());
+        $validated = $request->validate([
+            'texto' => 'nullable|string',
+            'id' => 'required|exists:documentos,id',
+            'id_textos' => 'required|exists:documentos_textos,id',
+            'nombre_del_documento' => 'required|string|max:255',
+            'lo_que_resuelve' => 'required|nullable|string',
+            'gestion_' => [
+                'required',
+                'date',
+                'after_or_equal:2000-01-01',
+                'before_or_equal:' . now()->toDateString(),
+            ],
+        ], [
+            'id.required' => 'El ID del documento es obligatorio.',
+            'id.exists' => 'El documento seleccionado no existe.',
+            'id_textos.required' => 'El ID del texto es obligatorio.',
+            'id_textos.exists' => 'El texto relacionado no existe en la base de datos.',
+            'nombre_del_documento.required' => 'El nombre del documento es obligatorio.',
+            'nombre_del_documento.string' => 'El nombre del documento debe ser una cadena de texto.',
+            'nombre_del_documento.max' => 'El nombre del documento no debe exceder los 255 caracteres.',
+            'lo_que_resuelve.string' => 'El campo "Lo que resuelve" debe ser una cadena de texto.',
+            'lo_que_resuelve.required' => 'La descripción de lo que resuelve es necesaria.',
+            'gestion_.required' => 'El campo gestión es obligatorio.',
+            'gestion_.date' => 'El campo gestión debe ser una fecha válida.',
+            'gestion_.after_or_equal' => 'La gestión no puede ser anterior al año 2000.',
+            'gestion_.before_or_equal' => 'La gestión no puede ser una fecha futura.',
+            'texto.string' => 'El campo texto debe ser una cadena de texto.',
+        ]);
+
+        try {
+            $documento = Documento::findOrFail($validated['id']);
+            $documento->update([
+                'nombre_del_documento' => $validated['nombre_del_documento'],
+                'lo_que_resuelve' => $validated['lo_que_resuelve'] ?? null,
+                'gestion_' => $validated['gestion_'],
+            ]);
+            $texto = DocumentoTexto::findOrFail($validated['id_textos']);
+            if ($request->has('textos') && isset($request->textos[0]['texto'])) {
+                $texto->update([
+                    'texto' => $request->textos[0]['texto'],
+                ]);
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Documento y texto actualizados correctamente.',
+                'documento' => $documento,
+                'texto' => $texto,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar documento o texto: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar los datos.',
+            ], 500);
+        }
+    }
+
+    public function eliminar($id){
+        Log::debug('valores para eliminacion:'.$id);
+
+        $documento = Documento::find($id);
+        if (!$documento) {
+            return response()->json(['message'=>'Documento no encontrado.'],404);
+        }
+        $documento->delete();
+        return response()->json(['message'=>'Documento eliminado correctamente']);
     }
 }

@@ -4,7 +4,25 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookMarked, BookOpen, BookUser, Contact, FileArchive, FileBadge, FilePlus, FileStack, FileText, FileWarning, Folder, Gavel, GraduationCap, Handshake, LayoutGrid, ListPlus, NotebookPen, Users, UsersRound } from 'lucide-react';
+import {
+    BookMarked,
+    BookOpen,
+    BookUser,
+    Contact,
+    FileArchive,
+    FileBadge,
+    FilePlus,
+    FileStack,
+    FileWarning,
+    Folder,
+    Gavel,
+    Handshake,
+    LayoutGrid,
+    ListPlus,
+    NotebookPen,
+    Users,
+    UsersRound,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -39,19 +57,19 @@ const mainNavItems: NavItem[] = [
         children: [
             {
                 title: 'Bachiller',
-                href: '#',
+                href: '/Bachiller-listar',
                 icon: Contact,
             },
             {
                 title: 'Academicos',
-                href: '#',
+                href: '/Academicos-listar',
                 icon: UsersRound,
             },
             {
-                title: 'Profecionales',
-                href: '#',
+                title: 'Profesionales',
+                href: '/Profesionales-listar',
                 icon: BookUser,
-            }
+            },
         ],
     },
     {
@@ -60,19 +78,19 @@ const mainNavItems: NavItem[] = [
         children: [
             {
                 title: 'HCU.',
-                href: '#',
+                href: '/Hcu-listar',
                 icon: BookMarked,
             },
             {
                 title: 'Rectorales',
-                href: '#',
+                href: '/Rectorales-listar',
                 icon: NotebookPen,
-            }
+            },
         ],
     },
     {
         title: 'Anti-Autonomistas',
-        href: '#',
+        href: '/AntiAutonomistas-listar',
         icon: FileWarning,
     },
     {
@@ -81,17 +99,17 @@ const mainNavItems: NavItem[] = [
         children: [
             {
                 title: 'Convenios',
-                href: '#',
+                href: '/Convenios-listar',
                 icon: Handshake,
             },
             {
                 title: 'Consejeros',
-                href: '#',
+                href: '/Consejeros-listar',
                 icon: Users,
             },
             {
                 title: 'Autoridades',
-                href: '#',
+                href: '/Autoridades-listar',
                 icon: Gavel,
             },
         ],
