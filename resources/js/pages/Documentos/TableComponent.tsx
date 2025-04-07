@@ -49,12 +49,12 @@ const TableComponent: React.FC<TableComponentProps> = ({ headers, data, itemsPer
         setValidationErrors,
         setSearchTerm,
         setCurrentPage,
-        setData, // Pasar setData aquí
+        setData,
     });
 
     return (
         <div>
-            <Search fields={headers.map((header) => header.label)} onSearch={handleSearch} />
+            <Search onSearch={handleSearch} />
             {alert && <CustomAlert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
             <Table>
                 <TableHeader>

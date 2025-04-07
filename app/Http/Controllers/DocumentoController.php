@@ -404,7 +404,7 @@ class DocumentoController extends Controller
             }
             return response()->json([
                 'success' => true,
-                'message' => 'Documento y texto actualizados correctamente.',
+                'message' => 'Documento actualizado correctamente.',
                 'documento' => $documento,
                 'texto' => $texto,
             ]);

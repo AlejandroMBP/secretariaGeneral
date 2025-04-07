@@ -1,11 +1,10 @@
 import { FC, useState } from 'react';
 
 interface SearchProps {
-    fields: string[]; // Los campos en los que se va a realizar la búsqueda
     onSearch: (searchTerm: string) => void; // Función para enviar el término de búsqueda
 }
 
-const Search: FC<SearchProps> = ({ fields, onSearch }) => {
+const Search: FC<SearchProps> = ({ onSearch }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

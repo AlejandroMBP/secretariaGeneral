@@ -93,7 +93,7 @@ export const createTableHandlers = ({
             nProgress.start();
             const response = await axios.put(route('documento.editar'), updatedData);
             setData((prevData) => prevData.map((item) => (item.id === updatedData.id ? { ...item, ...updatedData } : item)));
-            setAlert({ message: 'Editado satisfactoriamente.', type: 'success' });
+            setAlert({ message: response.data.message, type: 'success' });
             setValidationErrors({});
             setIsEditModalOpen(false);
         } catch (error: any) {
