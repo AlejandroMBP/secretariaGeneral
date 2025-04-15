@@ -7,19 +7,14 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use App\Models\Documento;
 use App\Models\DocumentoTexto;
+use App\Models\Resolucion;
 use App\Models\TipoDocumento;
 use Smalot\PdfParser\Parser;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use thiagoalessio\TesseractOCR\TesseractOCR;
-use Intervention\Image\Facades\Image;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver as GdDriver;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
 use setasign\Fpdi\Fpdi;
 use App\Services\FPDIWithRotate; // Usamos nuestra clase personalizada FPDI con Rotate
-use function Psy\debug;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentoController extends Controller
 {
@@ -29,7 +24,6 @@ class DocumentoController extends Controller
         return Inertia::render('Documentos/index',[
             'tipoDocumentos' => $tipoDocumentos,]);
     }
-
     public function guardar(Request $request)
     {
         Log::debug('Datos que llegan: ', $request->all());
@@ -110,7 +104,6 @@ class DocumentoController extends Controller
             return response()->json(['error' => 'Error al guardar el documento'], 500);
         }
     }
-
     public function preprocesarArchivo(Request $request)
     {
         Log::debug('Archivo recibido para preprocesamiento: ', $request->all());
@@ -120,42 +113,48 @@ class DocumentoController extends Controller
         }
 
         $file = $request->file('archivo');
-        $rutaTemporal = $file->store('documentos_temporales', 'public');
+
+        // Validación de tipo de archivo
+        if (strtolower($file->getClientOriginalExtension()) !== 'pdf') {
+            return response()->json(['error' => 'El archivo debe ser un PDF.'], 400);
+        }
+
+        // Guardar archivo temporal con nombre único
+        $nombreArchivo = uniqid('pdf_') . '.' . $file->getClientOriginalExtension();
+        $rutaTemporal = $file->storeAs('documentos_temporales', $nombreArchivo, 'public');
         $rutaCompletaPdf = storage_path("app/public/$rutaTemporal");
 
         try {
+            // Extraer texto con Smalot PDF Parser
             $parser = new Parser();
-            $pdf = $parser->parseFile(storage_path("app/public/$rutaTemporal"));
+            $pdf = $parser->parseFile($rutaCompletaPdf);
             $textoExtraido = trim($pdf->getText());
 
+            // Si no se extrajo texto suficiente, usar OCR
             if (strlen($textoExtraido) < 5) {
                 Log::info("Texto insuficiente con Smalot, usando OCR con Tesseract.");
-                $textoOCR = $this->extraerTextoOCR($rutaTemporal);
-                $textoCorregido = $this->corregirTextoHunspell($textoOCR);
 
-                // $exactitudOCR = $this->calcularCalidadOCR($textoOCR, $textoCorregido);
-                // $eficienciaOCR = $this->estimarEficienciaOCR($textoOCR, $rutaCompletaPdf);
-                // $exactitudFinal = ($exactitudOCR + $eficienciaOCR) / 2;
+                try {
+                    $textoOCR = $this->extraerTextoOCR($rutaCompletaPdf);
 
-                $falloOCR = $this->calcularFalloOCR($textoOCR, $textoCorregido);
-                $falloEficiencia = $this->estimarFalloOCR($textoOCR, $rutaCompletaPdf);
-                $falloFinal = ($falloOCR + $falloEficiencia) / 2;
-                return response()->json([
-                    'mensaje' => 'Texto extraído con OCR.',
-                    'metodo_usado' => 'OCR (Tesseract)',
-                    'texto_extraido' => $textoOCR,
-                    'porcentaje_fallo' => round($falloFinal, 2) . '%',
-                    'ruta_temporal' => $rutaTemporal,
-                ]);
+                    Log::debug('Texto OCR corregido: ' . $textoOCR);
+
+                    return response()->json([
+                        'mensaje' => 'Texto extraído con OCR.',
+                        'metodo_usado' => 'OCR (Tesseract)',
+                        'texto_extraido' => $textoOCR,
+                        'ruta_temporal' => $rutaTemporal,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Error durante OCR con Tesseract: " . $e->getMessage());
+                    return response()->json(['error' => 'Error al procesar con OCR.'], 500);
+                }
             }
 
-            // $exactitudSmalot = strlen($textoExtraido) > 0 ? 100 : 0;
-            $falloSmalot = 0;
             return response()->json([
                 'mensaje' => 'Texto extraído con Smalot/PdfParser.',
                 'metodo_usado' => 'Smalot/PdfParser',
                 'texto_extraido' => $textoExtraido,
-                'porcentaje_fallo' => round($falloSmalot, 2) . '%',
                 'ruta_temporal' => $rutaTemporal,
             ]);
         } catch (\Exception $e) {
@@ -163,10 +162,10 @@ class DocumentoController extends Controller
             return response()->json(['error' => 'Error interno al procesar el archivo.'], 500);
         }
     }
-
     private function extraerTextoOCR($rutaArchivo)
     {
-        $rutaCompletaPdf = storage_path('app/public/' . $rutaArchivo);
+        // $rutaCompletaPdf = storage_path('app/public/' . $rutaArchivo);
+        $rutaCompletaPdf = $rutaArchivo;
 
         if (!file_exists($rutaCompletaPdf)) {
             Log::error("El archivo PDF no existe en: " . $rutaCompletaPdf);
@@ -182,12 +181,15 @@ class DocumentoController extends Controller
             // Convertir PDF a imágenes con Ghostscript
             $this->convertirPdfAImagenes($rutaCompletaPdf, $directorioImagenes);
 
+            // $this->mejorarImagenesBlancoYNegro($directorioImagenes); // <- Aquí
+
+
             // Extraer texto de imágenes con OCR
             $textoExtraido = $this->procesarImagenesOCR($directorioImagenes);
 
             //Aplicar correccion ortografica con huspell
             $textoCorregido = $this->corregirTextoHunspell($textoExtraido);
-
+        // Log::debug('corregido: '. $textoCorregido);
             // Limpiar imágenes después del procesamiento
             $this->limpiarImagenesTemporales($directorioImagenes);
 
@@ -206,7 +208,8 @@ class DocumentoController extends Controller
         $gsPath = PHP_OS_FAMILY === 'Windows' ? '"C:\\Program Files\\gs\\gs10.05.0\\bin\\gswin64c.exe"' : 'gs';
 
         // Convertir PDF a imágenes TIFF con compresión CCITT Group 4 (ideal para OCR)
-        $cmd = "$gsPath -sDEVICE=tiffg4 -o $directorioImagenes/pagina%d.tiff -r600x600 $rutaPdf";
+        // $cmd = "$gsPath -sDEVICE=tiffg4 -o $directorioImagenes/pagina%d.tiff -r600x600 $rutaPdf";
+        $cmd = "$gsPath -sDEVICE=pnggray -o $directorioImagenes/pagina%d.png -r300 $rutaPdf";
 
         exec($cmd, $output, $resultCode);
         if ($resultCode !== 0) {
@@ -218,7 +221,9 @@ class DocumentoController extends Controller
     {
         $textoExtraido = "";
 
-        foreach (glob("$directorioImagenes/pagina*.tiff") as $nombreImagen) {
+        // foreach (glob("$directorioImagenes/pagina*.tiff") as $nombreImagen) {
+            foreach (glob("$directorioImagenes/pagina*.png") as $nombreImagen) {
+
             $tesseract = new TesseractOCR($nombreImagen);
             $tesseract->lang('spa');
 
@@ -233,18 +238,6 @@ class DocumentoController extends Controller
         return $textoExtraido;
     }
 
-    private function mejorarImagenOCR($nombreImagen)
-    {
-        $output = null;
-        $resultCode = null;
-        $cmdImageMagick = "convert $nombreImagen -sharpen 0x1 -resize 1024x1024 -quality 90 $nombreImagen";
-
-        exec($cmdImageMagick, $output, $resultCode);
-        if ($resultCode !== 0) {
-            Log::error("Error al limpiar imagen con ImageMagick: " . implode("\n", $output));
-        }
-    }
-
     private function limpiarImagenesTemporales($directorioImagenes)
     {
         foreach (glob("$directorioImagenes/pagina*.png") as $nombreImagen) {
@@ -253,79 +246,50 @@ class DocumentoController extends Controller
     }
     private function corregirTextoHunspell($texto)
     {
-        $diccionario = '/usr/share/hunspell/es_ES.dic'; // Asegúrate de tener el diccionario instalado
         $archivoTemporal = tempnam(sys_get_temp_dir(), 'hunspell');
-
         file_put_contents($archivoTemporal, $texto);
 
-        // Ejecutar Hunspell
-        $cmd = "hunspell -d es_ES -a < $archivoTemporal";
+        $cmd = "hunspell -d es_ES -a < " . escapeshellarg($archivoTemporal);
         exec($cmd, $output, $resultCode);
-
         unlink($archivoTemporal);
 
         if ($resultCode !== 0) {
             Log::error("Error en Hunspell: " . implode("\n", $output));
-            return $texto; // Si falla, devolvemos el texto sin corrección
+            return $texto;
         }
 
-        // Procesar la salida de Hunspell
-        $textoCorregido = "";
+        $palabras = preg_split('/\s+/', $texto);
+        $corregidas = [];
+        $i = 0;
+
         foreach ($output as $linea) {
-            if (!empty($linea) && $linea[0] !== '&' && $linea[0] !== '#') {
-                $textoCorregido .= $linea . "\n";
+            // Saltar la línea de encabezado
+            if (trim($linea) === '' || $linea[0] === '@') {
+                continue;
             }
+
+            // No hay error ortográfico
+            if ($linea[0] === '*') {
+                $corregidas[] = $palabras[$i];
+            }
+            // Hay sugerencias
+            elseif ($linea[0] === '&') {
+                // Ejemplo: & incorecto 1 0: incorrecto
+                $partes = explode(':', $linea, 2);
+                $sugerencias = isset($partes[1]) ? explode(', ', trim($partes[1])) : [];
+                $corregidas[] = $sugerencias[0] ?? $palabras[$i]; // usar la primera sugerencia si hay
+            }
+            // No hay sugerencias (desconocida)
+            else {
+                $corregidas[] = $palabras[$i];
+            }
+
+            $i++;
         }
 
-        return trim($textoCorregido);
-    }
-    private function calcularCalidadOCR($textoAntes, $textoDespues)
-    {
-        $palabrasAntes = str_word_count($textoAntes);
-        $palabrasDespues = str_word_count($textoDespues);
-        $corregidas = abs($palabrasAntes - $palabrasDespues);
-
-        if ($palabrasAntes == 0) return 0;
-
-        $calidad = (1 - ($corregidas / $palabrasAntes)) * 100;
-        return max(0, $calidad);
+        return implode(' ', $corregidas);
     }
 
-    private function estimarEficienciaOCR($textoExtraido, $rutaPdf)
-    {
-        $caracteresExtraidos = strlen($textoExtraido);
-        $tamanioPdf = filesize($rutaPdf);
-        $estimacionCaracteres = $tamanioPdf / 2;
-
-        $eficiencia = ($caracteresExtraidos / $estimacionCaracteres) * 100;
-        return min(100, max(0, $eficiencia));
-    }
-
-    private function calcularFalloOCR($textoExtraido, $textoCorregido)
-    {
-        $palabrasAntes = str_word_count($textoExtraido);
-        $palabrasDespues = str_word_count($textoCorregido);
-        $corregidas = abs($palabrasAntes - $palabrasDespues);
-
-        if ($palabrasAntes == 0) return 100; // Fallo total si no hay palabras.
-
-        $exactitud = (1 - ($corregidas / $palabrasAntes)) * 100;
-        $fallo = 100 - max(0, $exactitud); // Convertimos exactitud en fallo.
-
-        return round($fallo, 2);
-    }
-
-    private function estimarFalloOCR($textoExtraido, $rutaPdf)
-    {
-        $caracteresExtraidos = strlen($textoExtraido);
-        $tamanioPdf = filesize($rutaPdf);
-        $estimacionCaracteres = $tamanioPdf / 2;
-
-        $eficiencia = ($caracteresExtraidos / $estimacionCaracteres) * 100;
-        $fallo = 100 - min(100, max(0, $eficiencia));
-
-        return round($fallo, 2);
-    }
     public function agregarMarcaDeAgua(Request $request)
     {
         $ruta = $request->input('ruta'); // Ruta del PDF original
@@ -358,7 +322,8 @@ class DocumentoController extends Controller
             'documentos' => $documentos
         ]);
     }
-    public function editarDocumento(Request $request){
+    public function editarDocumento(Request $request)
+    {
         Log::debug('lo que se esta editando: ',$request->all());
         $validated = $request->validate([
             'texto' => 'nullable|string',
@@ -390,11 +355,17 @@ class DocumentoController extends Controller
         ]);
 
         try {
-            $documento = Documento::findOrFail($validated['id']);
+            // $documento = Documento::findOrFail($validated['id']);
+            // $documento->update([
+            //     'nombre_del_documento' => $validated['nombre_del_documento'],
+            //     'lo_que_resuelve' => $validated['lo_que_resuelve'] ?? null,
+            //     'gestion_' => $validated['gestion_'],
+            // ]);
+            $documento = Resolucion::findOrFail($validated['id']);
             $documento->update([
                 'nombre_del_documento' => $validated['nombre_del_documento'],
                 'lo_que_resuelve' => $validated['lo_que_resuelve'] ?? null,
-                'gestion_' => $validated['gestion_'],
+                'gestion' => $validated['gestion_'],
             ]);
             $texto = DocumentoTexto::findOrFail($validated['id_textos']);
             if ($request->has('textos') && isset($request->textos[0]['texto'])) {
@@ -417,7 +388,8 @@ class DocumentoController extends Controller
         }
     }
 
-    public function eliminar($id){
+    public function eliminar($id)
+    {
         Log::debug('valores para eliminacion:'.$id);
 
         $documento = Documento::find($id);

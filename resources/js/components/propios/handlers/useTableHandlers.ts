@@ -107,6 +107,7 @@ export const createTableHandlers = ({
             nProgress.done();
         }
     };
+
     const handleSearch = (term: string) => {
         setSearchTerm(term);
         setCurrentPage(1);

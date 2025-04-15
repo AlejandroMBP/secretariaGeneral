@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\AcademicosController;
 use App\Http\Controllers\AntiAutonomistasController;
+use App\Http\Controllers\ArchivosController;
 use App\Http\Controllers\AutoridadesController;
 use App\Http\Controllers\BachilleresController;
 use App\Http\Controllers\ConsejerosController;
 use App\Http\Controllers\ConveniosController;
+use App\Http\Controllers\DiplomasController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\HCUController;
 use App\Http\Controllers\ProfesionalesController;
@@ -35,6 +37,16 @@ Route::put('/roles/{role}', [RolesPermisosController::class, 'update'])->name('r
 Route::delete('/roles/destroy/{role}', [RolesPermisosController::class, 'destroy'])->name('roles.destroy');
 
 Route::post('/roles/{role}/permissions', [RolesPermisosController::class, 'assignPermissions'])->name('roles.assignPermissions');
+
+Route::get('/archivos', [ArchivosController::class, 'index'])->name('archivos.index');
+
+Route::get('/formulario/resoluciones', [ArchivosController::class,'FResoluciones'])->name('formulario.ver');
+Route::post('/formulario/resoluciones/guardar', [ArchivosController::class,'resoluciones_guardar'])->name('resolucion.guardar');
+Route::get('/formulario/diplomas', [DiplomasController::class,'FDiplomas'])->name('diplomas.ver');
+Route::post('/formulario/diplomas/guardar', [DiplomasController::class,'diplomas_guardar'])->name('diplomas.guardar');
+Route::get('/formulario/convenio', [ConveniosController::class,'FConvenio'])->name('convenio.ver');
+Route::post('/formulario/convenio/guardar', [ConveniosController::class,'convenio_guardar'])->name('convenio.guardar');
+
 
 Route::get('/documentos', [DocumentoController::class, 'index'])->name('documento.index');
 Route::post('/cargar-pdf', [DocumentoController::class, 'cargar'])->name('documento.cargar');

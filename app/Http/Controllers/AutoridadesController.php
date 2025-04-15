@@ -21,4 +21,7 @@ class AutoridadesController extends Controller
             'documentos' => $documentos
         ]);
     }
+    public function FAutoridades(){
+        
+    }
 }

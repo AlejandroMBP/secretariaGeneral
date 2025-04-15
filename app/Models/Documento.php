@@ -15,7 +15,7 @@ class Documento extends Model
     protected $fillable = [
         'nombre_del_documento',
         'ruta_de_guardado',
-        'tipo_documento_id',
+        'tipo_documento_detalle_id',
         'lo_que_resuelve',
         'tipo_archivo',
         'gestion_',
@@ -34,9 +34,9 @@ class Documento extends Model
     /**
      * Relación con los textos extraídos del documento.
      */
-    public function tipoDocumento()
+    public function tipoDocumentoDetalle()
     {
-        return $this->belongsTo(TipoDocumento::class, 'tipo_documento_id');
+        return $this->belongsTo(tipoDocumentoDetalle::class, 'tipo_documento_detalle_id');
     }
 
     public function textos()

@@ -14,6 +14,7 @@ export default function DocumentosFormulario(props: DocumentosFormularioProps) {
     const [preprocesado, setPreprocesado] = useState(false);
     const [errors, setErrors] = useState<any>({});
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+    const [cargando, setCargando] = useState(false);
 
     const [form, setForm] = useState({
         titulo: '',
@@ -34,13 +35,18 @@ export default function DocumentosFormulario(props: DocumentosFormularioProps) {
 
     const handlePreprocesar = async (e: React.FormEvent) => {
         e.preventDefault();
+
         if (!form.archivo) {
             setAlert({ message: 'Por favor, selecciona un archivo PDF.', type: 'info' });
             return;
         }
+
+        setCargando(true); // Inicia carga
         nProgress.start();
+
         const formData = new FormData();
         formData.append('archivo', form.archivo);
+
         try {
             const response = await axios.post('/documentos/preprocesar', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -52,8 +58,8 @@ export default function DocumentosFormulario(props: DocumentosFormularioProps) {
         } catch (error: any) {
             console.error('Error al preprocesar el documento:', error.response?.data || error.message);
             setAlert({ message: 'Error al preprocesar el documento', type: 'error' });
-            // alert('Error al preprocesar el documento');
         } finally {
+            setCargando(false); // Termina carga
             nProgress.done();
         }
     };
@@ -155,8 +161,29 @@ export default function DocumentosFormulario(props: DocumentosFormularioProps) {
                         </select>
                         {errors.categoria && <p className="text-sm text-red-500">{errors.categoria[0]}</p>} {/* Error para la categoría */}
                         <PdfUploader onUpload={handleUpload} reset={preprocesado} />
-                        <button type="submit" className="w-full rounded-md bg-blue-600 p-3 text-white transition-all hover:bg-blue-700">
-                            Preprocesar Documento
+                        <button
+                            type="submit"
+                            disabled={cargando}
+                            className={`w-full rounded-md p-3 text-white transition-all ${
+                                cargando ? 'cursor-not-allowed bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+                            }`}
+                        >
+                            {cargando ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg
+                                        className="h-5 w-5 animate-spin text-white"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                    </svg>
+                                    Procesando...
+                                </span>
+                            ) : (
+                                'Preprocesar Documento'
+                            )}
                         </button>
                     </form>
                 </div>

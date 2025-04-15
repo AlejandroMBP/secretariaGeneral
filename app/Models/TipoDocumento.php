@@ -9,6 +9,10 @@ class TipoDocumento extends Model
     protected $table = 'tipo_documento';
     protected $fillable = ['nombre_tipo'];
     protected $date = ['delete_at'];
+    public function detalles()
+    {
+        return $this->hasMany(TipoDocumentoDetalle::class);
+    }
     public function documentos()
     {
         return $this->hasMany(Documento::class, 'tipo_documento_id');

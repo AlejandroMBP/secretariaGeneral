@@ -12,6 +12,7 @@ import {
     FileArchive,
     FileBadge,
     FilePlus,
+    FilePlus2,
     FileStack,
     FileWarning,
     Folder,
@@ -45,6 +46,11 @@ const mainNavItems: NavItem[] = [
         title: 'Carga de documentos',
         href: '/documentos',
         icon: FilePlus,
+    },
+    {
+        title: 'Carga Archivos',
+        href: '/archivos',
+        icon: FilePlus2,
     },
     {
         title: 'Documentos',

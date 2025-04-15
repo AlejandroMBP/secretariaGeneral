@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Autoridad extends Model
+{
+    use SoftDeletes;
+
+    protected $table = 'autoridades';
+
+    protected $fillable = [
+        'persona',
+        'nombres',
+        'apellidos',
+        'documento_id',
+        'tipo_posicio',
+        'gestion',
+        'celular'
+    ];
+
+    public function documento()
+    {
+        return $this->belongsTo(Documento::class);
+    }
+}
