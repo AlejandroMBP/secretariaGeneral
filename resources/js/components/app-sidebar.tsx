@@ -99,6 +99,7 @@ const mainNavItems: NavItem[] = [
         href: '/AntiAutonomistas-listar',
         icon: FileWarning,
     },
+
     {
         title: 'Otros',
         icon: ListPlus,

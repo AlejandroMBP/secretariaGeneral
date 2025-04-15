@@ -20,8 +20,8 @@ class DiplomasController extends Controller
         'DIPLOMAS DE BACHILLER',
         'CERTIFICADOS SUPLETORIO',
         'DIPLOMAS ACADÉMICOS',
-        'TITULOS PROFESIONALES POR REVALIDACIÓN',
-        'DIPLOMAS DE POSTGRADO',])
+        'TÍTULOS PROFESIONALES POR REVALIDACIÓN',
+        'DIPLOMAS DE POST GRADO',])
         ->get();
 
     return Inertia::render('Formularios/Diplomas', [
@@ -81,7 +81,7 @@ class DiplomasController extends Controller
         ]);
 
         if ($tipoDocumentoNombre === 'DIPLOMAS DE BACHILLER') {
-            $validated['carrera'] = 'bachiller';
+            $validated['carrera'] = 'BACHILLER';
         }
         if ($validated['detalleDocumentoId'] == null) {
             $tipoDocumento = DB::table('tipo_documento')
@@ -103,10 +103,8 @@ class DiplomasController extends Controller
         }
 
         $documento = new Documento();
-        $documento->nombre_del_documento = 'de diplomas';
         $documento->ruta_de_guardado = $validated['ruta_temporal'];
         $documento->tipo_documento_detalle_id = $validated['detalleDocumentoId']??null;
-        $documento->lo_que_resuelve = 'quitar';
         $documento->tipo_archivo = 'pdf';
         $documento->gestion_ = now();
         $documento->usuario_id = Auth::id();
@@ -116,6 +114,8 @@ class DiplomasController extends Controller
                 'documento_id' => $documento->id,
                 'texto' => $request->texto_extraido,
             ]);
+            $documento->load('textos', 'tipoDocumentoDetalle');
+            $documento->searchable();
         }
         $resolucion = Diploma::create([
             'numero_serie'=>$validated['numero'],

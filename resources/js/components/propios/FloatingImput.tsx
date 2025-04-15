@@ -8,7 +8,7 @@ interface FloatingInputProps {
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     required?: boolean;
-    error?: string; // Nueva propiedad para el error
+    error?: string;
 }
 
 const FloatingInput: React.FC<FloatingInputProps> = ({ id, name, label, type = 'text', value, onChange, required = false, error }) => {
@@ -26,7 +26,7 @@ const FloatingInput: React.FC<FloatingInputProps> = ({ id, name, label, type = '
             />
             <label
                 htmlFor={id}
-                className="dark:bg-sidebar absolute start-3 top-2 z-10 origin-[0] -translate-y-3 scale-75 transform bg-white px-1 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-blue-600 dark:text-gray-300 dark:peer-focus:text-blue-400"
+                className="dark:bg-sidebar absolute start-3 top-1 z-10 origin-[0] -translate-y-3 scale-75 transform rounded-4xl border-transparent bg-white px-3 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-3.5 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:top-1 peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-blue-600 dark:text-gray-300 dark:peer-focus:text-blue-400"
             >
                 {label}
             </label>

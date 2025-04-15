@@ -317,7 +317,27 @@ class DocumentoController extends Controller
 
     public function listar()
     {
-        $documentos = Documento::with('usuario','textos')->latest()->get();
+        $documentos = Resolucion::with([
+            'documento.tipoDocumentoDetalle:id,Nombre',
+            'documento.textos:id,documento_id,texto'
+        ])
+        ->select('id', 'numero_resolucion', 'nombre_del_documento', 'lo_que_resuelve', 'gestion', 'documento_id','d_a_documento_id')
+        ->latest()
+        ->get()
+        ->map(function ($resolucion) {
+            return [
+                'numero_resolucion'     => $resolucion->numero_resolucion,
+                'nombre_del_documento'  => $resolucion->nombre_del_documento,
+                'lo_que_resuelve'       => $resolucion->lo_que_resuelve,
+                'gestion'               => $resolucion->gestion,
+                'ruta_de_guardado'      => $resolucion->documento->ruta_de_guardado ?? null,
+                'tipo_documento'        => $resolucion->documento->tipoDocumentoDetalle->Nombre ?? null,
+                'documento_id'          => $resolucion->documento_id,
+                'textos_id'             => $resolucion->documento->textos->pluck('id')->toArray(),
+
+            ];
+        });
+
         return Inertia::render('Documentos/Listar', [
             'documentos' => $documentos
         ]);
@@ -355,12 +375,6 @@ class DocumentoController extends Controller
         ]);
 
         try {
-            // $documento = Documento::findOrFail($validated['id']);
-            // $documento->update([
-            //     'nombre_del_documento' => $validated['nombre_del_documento'],
-            //     'lo_que_resuelve' => $validated['lo_que_resuelve'] ?? null,
-            //     'gestion_' => $validated['gestion_'],
-            // ]);
             $documento = Resolucion::findOrFail($validated['id']);
             $documento->update([
                 'nombre_del_documento' => $validated['nombre_del_documento'],

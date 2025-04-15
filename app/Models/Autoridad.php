@@ -9,7 +9,7 @@ class Autoridad extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'autoridades';
+    protected $table = 'Autoridades';
 
     protected $fillable = [
         'persona',

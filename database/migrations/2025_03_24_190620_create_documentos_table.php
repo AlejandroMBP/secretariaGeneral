@@ -28,10 +28,8 @@ return new class extends Migration
 
         Schema::create('documentos', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre_del_documento');
             $table->string('ruta_de_guardado')->nullable();
             $table->unsignedBigInteger('tipo_documento_detalle_id')->nullable();
-            $table->string('lo_que_resuelve');
             $table->string('tipo_archivo');
             $table->string('gestion_')->nullable();
             $table->unsignedBigInteger('usuario_id')->nullable();
@@ -127,6 +125,4 @@ return new class extends Migration
         Schema::dropIfExists('tipo_documento_detalle');
         Schema::dropIfExists('tipo_documento');
     }
-
-
 };

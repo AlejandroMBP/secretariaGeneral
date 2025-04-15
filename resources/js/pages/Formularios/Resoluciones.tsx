@@ -1,104 +1,29 @@
 import CustomAlert from '@/components/CustomAlert';
+import FloatingInput from '@/components/propios/FloatingImput';
+import FloatingTextarea from '@/components/propios/FloatingTextarea';
+import { useResolucionesForm } from '@/components/propios/handlers/useResolucionesFormulario';
 import PdfUploader from '@/components/propios/PdfUploader';
 import AppLayout from '@/layouts/app-layout';
 import { DocumentosFormularioProps } from '@/types/interfaces';
 import { Head, Link } from '@inertiajs/react';
-import axios from 'axios';
-import nProgress from 'nprogress';
-import { useState } from 'react';
 
 export default function ResolucionesFormulario(props: DocumentosFormularioProps) {
-    const [formData, setFormData] = useState({
-        titulo: '',
-        numero: '',
-        fecha: '',
-        descripcion: '',
-        tipoDocumentoId: '',
-        detalleDocumentoId: '',
-        archivo: null as File | null,
-    });
-
-    const [preprocesado, setPreprocesado] = useState(false);
-    const [textoExtraido, setTextoExtraido] = useState('');
-    const [cargando, setCargando] = useState(false);
-    const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-    const [rutaTemporal, setRutaTemporal] = useState('');
-
-    const handleUpload = (file: File) => {
-        setFormData({ ...formData, archivo: file });
-    };
-
-    const handlePreprocesar = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!formData.archivo) return;
-
-        setCargando(true);
-        nProgress.start();
-
-        const formDataToSend = new FormData();
-        formDataToSend.append('archivo', formData.archivo);
-
-        try {
-            const response = await axios.post('/documentos/preprocesar', formDataToSend, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-
-            setTextoExtraido(response.data.texto_extraido);
-            setRutaTemporal(response.data.ruta_temporal);
-            setPreprocesado(true);
-        } catch (error: any) {
-            console.error('Error al preprocesar el documento:', error.response?.data || error.message);
-            setAlert({ message: 'Error al preprocesar el documento', type: 'error' });
-        } finally {
-            setCargando(false);
-            nProgress.done();
-        }
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-    };
-
-    const handleGuardar = async () => {
-        nProgress.start();
-        const datos = new FormData();
-        datos.append('titulo', formData.titulo);
-        datos.append('descripcion', formData.descripcion);
-        datos.append('numero', formData.numero);
-        datos.append('fecha', formData.fecha);
-        datos.append('ruta_temporal', rutaTemporal);
-        datos.append('detalleDocumentoId', formData.detalleDocumentoId);
-        datos.append('texto_extraido', textoExtraido);
-        try {
-            await axios.post('/formulario/resoluciones/guardar', datos, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-
-            setAlert({ message: 'Documento guardado exitosamente', type: 'success' });
-            setPreprocesado(false);
-            setTextoExtraido('');
-            setFormData({
-                titulo: '',
-                numero: '',
-                fecha: '',
-                descripcion: '',
-                tipoDocumentoId: '',
-                detalleDocumentoId: '',
-                archivo: null,
-            });
-        } catch (error: any) {
-            console.error('Error al guardar el documento:', error.response?.data || error.message);
-            setAlert({ message: 'Error al guardar el documento', type: 'error' });
-        } finally {
-            nProgress.done();
-        }
-    };
-
-    const tipoResolucion = props.tipoDocumento.find((tipo) => tipo.Nombre_tipo === 'Resolucion');
+    const {
+        formData,
+        handleChange,
+        handleUpload,
+        handlePreprocesar,
+        handleGuardar,
+        preprocesado,
+        setPreprocesado,
+        textoExtraido,
+        setTextoExtraido,
+        cargando,
+        alert,
+        setAlert,
+        errors,
+        tipoResolucion,
+    } = useResolucionesForm({ tipoDocumento: props.tipoDocumento });
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Resoluciones', href: '/formulario/resoluciones' }]}>
@@ -109,17 +34,14 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
             <div className="space-y-6 p-6">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Formulario de Resoluciones</h1>
 
-                <form onSubmit={handlePreprocesar} className="space-y-4">
+                <form onSubmit={handlePreprocesar} className="dark:bg-sidebar space-y-4 rounded-xl bg-white p-6 shadow-md">
                     <div>
-                        <label htmlFor="detalleDocumentoId" className="block text-sm font-medium text-gray-700 dark:text-white">
-                            Detalle del Documento
-                        </label>
                         <select
                             id="detalleDocumentoId"
                             name="detalleDocumentoId"
                             value={formData.detalleDocumentoId}
                             onChange={handleChange}
-                            className="mt-1 w-full rounded-sm border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            className="dark:bg-sidebar w-full rounded-md border border-gray-300 bg-white p-3 text-gray-900 focus:ring dark:border-white dark:text-gray-100"
                         >
                             <option value="">Seleccione un tipo</option>
                             {tipoResolucion?.detalles?.map((detalle) => (
@@ -135,67 +57,50 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label htmlFor="numero" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Número de resolución
-                            </label>
-                            <input
-                                type="text"
-                                name="numero"
-                                id="numero"
-                                value={formData.numero}
-                                onChange={handleChange}
-                                className="mt-1 w-full rounded-sm border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Titulo de la resolución
-                            </label>
-                            <input
-                                type="text"
-                                name="titulo"
-                                id="titulo"
-                                value={formData.titulo}
-                                onChange={handleChange}
-                                className="mt-1 w-full rounded-sm border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            />
-                        </div>
+                        <FloatingInput
+                            id="numero"
+                            name="numero"
+                            label="Numero resolucion"
+                            value={formData.numero}
+                            type="number"
+                            onChange={handleChange}
+                            required
+                            error={errors.numero ? errors.numero[0] : ''}
+                        />
+                        <FloatingInput
+                            id="titulo"
+                            name="titulo"
+                            label="Titulo de la resolución"
+                            value={formData.titulo}
+                            onChange={handleChange}
+                            required
+                            error={errors.titulo ? errors.titulo[0] : ''}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <label htmlFor="fecha" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Fecha
-                            </label>
-                            <input
-                                type="date"
-                                name="fecha"
-                                id="fecha"
-                                value={formData.fecha}
-                                onChange={handleChange}
-                                className="mt-1 w-full rounded-sm border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Lo que resuelve
-                            </label>
-                            <textarea
-                                name="descripcion"
-                                id="descripcion"
-                                rows={4}
-                                value={formData.descripcion}
-                                onChange={handleChange}
-                                className="mt-1 w-full rounded-sm border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            />
-                        </div>
+                        <FloatingInput
+                            id="fecha"
+                            name="fecha"
+                            label="Gestion de resolución"
+                            value={formData.fecha}
+                            onChange={handleChange}
+                            required
+                            type="date"
+                            error={errors.fecha ? errors.fecha[0] : ''}
+                        />
+                        <FloatingTextarea
+                            id="descripcion"
+                            name="descripcion"
+                            label="Gestion de resolución"
+                            value={formData.descripcion}
+                            onChange={handleChange}
+                            required
+                            error={errors.descripcion ? errors.descripcion[0] : ''}
+                            rows={6}
+                        />
                     </div>
-
                     <PdfUploader onUpload={handleUpload} reset={preprocesado} />
-
                     <button
                         type="submit"
                         disabled={cargando}
@@ -215,7 +120,6 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
                             'Preprocesar Documento'
                         )}
                     </button>
-
                     {preprocesado && (
                         <div className="mt-6 rounded-lg bg-gray-50 p-4 shadow-md dark:bg-gray-700">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Resultado del Preprocesamiento</h3>
@@ -233,7 +137,6 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
                                 >
                                     Volver a Intentar
                                 </button>
-
                                 <button
                                     type="button"
                                     onClick={handleGuardar}
@@ -244,7 +147,6 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
                             </div>
                         </div>
                     )}
-
                     <div className="mt-6 flex justify-between">
                         <Link
                             href="/archivos"

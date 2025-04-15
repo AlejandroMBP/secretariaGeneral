@@ -9,7 +9,7 @@ import axios from 'axios';
 import nProgress from 'nprogress';
 import { useState } from 'react';
 
-export default function ResolucionesFormulario(props: DocumentosFormularioProps) {
+export default function DiplomasFormulario(props: DocumentosFormularioProps) {
     const [formData, setFormData] = useState({
         numero: '',
         tipoDocumentoId: '',
@@ -71,6 +71,13 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
             [name]: value,
             ...(name === 'tipoDocumentoId' ? { detalleId: '' } : {}),
         }));
+        if (errors[name]) {
+            setErrors((prevErrors) => {
+                const updatedErrors = { ...prevErrors };
+                delete updatedErrors[name];
+                return updatedErrors;
+            });
+        }
     };
 
     const handleGuardar = async () => {
@@ -124,7 +131,7 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
     const mostrarSegundoSelect = ![
         'TÍTULOS PROFESIONALES',
         'CERTIFICADOS SUPLETORIO',
-        'TITULOS PROFESIONALES POR REVALIDACIÓN',
+        'TÍTULOS PROFESIONALES POR REVALIDACIÓN',
         'DIPLOMAS ACADÉMICOS',
     ].includes(tipoSeleccionado?.Nombre_tipo || '');
     return (
@@ -177,7 +184,7 @@ export default function ResolucionesFormulario(props: DocumentosFormularioProps)
                             value={formData.numero}
                             onChange={handleChange}
                             required
-                            error={errors.numero ? errors.apellido[0] : ''} // Pasamos el error si existe
+                            error={errors.numero ? errors.numero[0] : ''} // Pasamos el error si existe
                         />
                         <FloatingInput
                             id="nombre"

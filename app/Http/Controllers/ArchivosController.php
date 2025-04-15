@@ -24,45 +24,81 @@ class ArchivosController extends Controller
     public function FResoluciones()
 {
     $tipoDocumentos = TipoDocumento::with('detalles')
-    ->where('nombre_tipo', 'Resolución')
+    ->where('nombre_tipo', 'RESOLUCIÓN')
     ->get();
 
-return Inertia::render('Formularios/Resoluciones', [
-    'tipoDocumento' => $tipoDocumentos,
-]);
+    return Inertia::render('Formularios/Resoluciones', [
+        'tipoDocumento' => $tipoDocumentos,
+    ]);
 
-}
-    public function resoluciones_guardar(Request $request){
-        Log::debug("datos recividos",$request->all());
-        $validated = $request->validate([
-            'titulo' => 'required|string|max:255',
-            'descripcion' => 'required|string',
-            'numero' => 'required|integer',
-            'fecha' => 'required|date',
-            'ruta_temporal' => 'required|string',
-            'detalleDocumentoId' => 'required|exists:tipo_documento_detalle,id',
-            'texto_extraido' => 'nullable|string',
-        ]);
-        // $detalle = TipoDocumentoDetalle::findOrFail($request->detalleDocumentoId);
-        // $tipoDocumentoId = $detalle->tipo_documento_id;
+    }
+    public function resoluciones_guardar(Request $request)
+    {
+        Log::debug("Datos recibidos", $request->all());
+
+        $validated = $request->validate(
+            [
+                'titulo' => 'required|string|max:255',
+                'descripcion' => 'required|string',
+                'numero' => ['required', 'integer', 'min:0'],
+                'fecha' => ['required', 'date', 'after_or_equal:2000-01-01', 'before_or_equal:today'],
+                'ruta_temporal' => 'required|string',
+                'detalleDocumentoId' => 'required|exists:tipo_documento_detalle,id',
+                'texto_extraido' => 'nullable|string',
+            ],
+            [
+                'titulo.required' => 'El título es obligatorio.',
+                'titulo.string' => 'El título debe ser una cadena de texto.',
+                'titulo.max' => 'El título no debe superar los 255 caracteres.',
+
+                'descripcion.required' => 'La descripción es obligatoria.',
+                'descripcion.string' => 'La descripción debe ser una cadena de texto.',
+
+                'numero.required' => 'El número es obligatorio.',
+                'numero.integer' => 'El número debe ser un valor entero sin caracteres especiales.',
+                'numero.min' => 'El número no puede ser negativo.',
+
+                'fecha.required' => 'La fecha es obligatoria.',
+                'fecha.date' => 'La fecha no tiene un formato válido.',
+                'fecha.after_or_equal' => 'La fecha no puede ser anterior al año 2000.',
+                'fecha.before_or_equal' => 'La fecha no puede ser mayor a la fecha actual.',
+
+                'ruta_temporal.required' => 'La ruta temporal es obligatoria.',
+                'ruta_temporal.string' => 'La ruta temporal debe ser una cadena de texto.',
+
+                'detalleDocumentoId.required' => 'Debe seleccionar un tipo de documento.',
+                'detalleDocumentoId.exists' => 'El tipo de documento seleccionado no es válido.',
+
+                'texto_extraido.string' => 'El texto extraído debe ser una cadena de texto.',
+            ]
+        );
 
         $documento = new Documento();
-        $documento->nombre_del_documento = $request->titulo;
         $documento->ruta_de_guardado = $request->ruta_temporal;
         $documento->tipo_documento_detalle_id = $request->detalleDocumentoId;
-        $documento->lo_que_resuelve = 'quitar';
-        $documento->tipo_archivo = 'pdf'; // Asegúrate de asignar el tipo de archivo correcto
-        $documento->gestion_ = now(); // Aquí pon el valor que corresponda
-        $documento->usuario_id = Auth::id(); // O el ID del usuario actual
+        $documento->tipo_archivo = 'pdf';
+        $documento->gestion_ = now();
+        $documento->usuario_id = Auth::id();
         $documento->save();
-           // Guardar el texto extraído en la tabla documentos_textos
+
+        Log::debug('Documento creado con ID: ', ['documento_id' => $documento->id]);
+
         if ($request->texto_extraido) {
             DocumentoTexto::create([
                 'documento_id' => $documento->id,
                 'texto' => $request->texto_extraido,
             ]);
+            $documento->load('textos', 'tipoDocumentoDetalle');
+
+            $documento->searchable();
         }
-        // Ahora insertamos en la tabla resoluciones (suponiendo que tienes esta tabla)
+
+        // Verificar si el documento fue guardado correctamente
+        if (!$documento->id) {
+            return response()->json(['message' => 'Error al guardar el documento'], 500);
+        }
+
+        // Insertar en la tabla resoluciones
         $resolucion = Resolucion::create([
             'nombre_del_documento' => $validated['titulo'],
             'lo_que_resuelve' => $validated['descripcion'],
@@ -71,6 +107,9 @@ return Inertia::render('Formularios/Resoluciones', [
             'documento_id' => $documento->id,
         ]);
 
+        Log::debug('Resolución guardada', ['resolucion_id' => $resolucion->id]);
+
         return response()->json(['message' => 'Resolución guardada exitosamente', 'resolucion' => $resolucion], 201);
     }
+
 }

@@ -13,7 +13,6 @@ class Diploma extends Model
 
     protected $fillable = [
         'numero_serie',
-        'categoria',
         'documento_id',
         'carrera',
         'nombres',

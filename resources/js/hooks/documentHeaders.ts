@@ -14,11 +14,15 @@ export const documentHeaders = [
     },
     {
         label: 'Gestion de resolucion',
-        key: 'gestion_',
+        key: 'gestion',
+    },
+    {
+        label: 'Resoluciones',
+        key: 'tipo_documento',
     },
     {
         label: 'Observacion',
-        key: '',
+        key: 'd_a_docuemnto_id',
     },
     {
         label: 'Acciones',

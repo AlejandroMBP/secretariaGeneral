@@ -212,3 +212,22 @@
     scrollbar-width: thin;
     scrollbar-color: #333333 #1a1a1a;
 }
+
+/* estilos de iconos */
+@layer base {
+    input[type='date']::-webkit-calendar-picker-indicator {
+        filter: invert(0.5);
+        opacity: 0.8;
+        cursor: pointer;
+    }
+
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type='number'] {
+        -moz-appearance: textfield;
+    }
+}
