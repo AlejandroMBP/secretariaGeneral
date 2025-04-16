@@ -58,6 +58,9 @@ Route::post('/documentos/ver-pdf', [DocumentoController::class, 'agregarMarcaDeA
 Route::put('/documentos/editar',[DocumentoController::class, 'editarDocumento'])->name('documento.editar');
 Route::delete('/documentos/eliminar/{id}',[DocumentoController::class,'eliminar'])->name('documentos.eliminar');
 
+Route::get('/documentos/buscar', [DocumentoController::class, 'buscar'])->name('documentos.buscar');
+
+
 Route::get('/Bachiller-listar', [BachilleresController::class, 'listar'])->name('bachiller.listar');
 Route::get('/Academicos-listar', [AcademicosController::class, 'listar'])->name('academicos.listar');
 Route::get('/AntiAutonomistas-listar', [AntiAutonomistasController::class, 'listar'])->name('antiAutonomistas.listar');

@@ -9,6 +9,7 @@ use App\Models\Documento;
 use App\Models\DocumentoTexto;
 use App\Models\Resolucion;
 use App\Models\TipoDocumento;
+use App\Models\TipoDocumentoDetalle;
 use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\Storage;
 use thiagoalessio\TesseractOCR\TesseractOCR;
@@ -413,4 +414,52 @@ class DocumentoController extends Controller
         $documento->delete();
         return response()->json(['message'=>'Documento eliminado correctamente']);
     }
+
+    public function buscar(Request $request)
+    {
+        $query = Documento::search($request->search ?? '')
+            ->query(function ($q) use ($request) {
+                // Relaciones necesarias
+                $q->with(['usuario', 'tipoDocumentoDetalle', 'textos']);
+
+                // Filtro por tipo
+                if ($request->filled('tipo')) {
+                    $q->whereHas('tipoDocumentoDetalle', function ($subQ) use ($request) {
+                        $subQ->where('Nombre', $request->tipo);
+                    });
+                }
+
+                // Filtro por gestión
+                if ($request->filled('gestion')) {
+                    $q->where('gestion_', $request->gestion);
+                }
+            });
+
+        $documentos = $query->get()->map(function ($doc) {
+            $texto = $doc->textos->first()?->texto ?? 'Sin texto';
+            $tipo = $doc->tipoDocumentoDetalle?->Nombre ?? 'N/A';
+            $usuario = $doc->usuario?->name ?? 'N/A';
+
+            // Asegurarse de que la ruta esté en el path público accesible
+            $rutaWeb = asset("storage/{$doc->ruta_de_guardado}");
+
+            return [
+                'id' => $doc->id,
+                'nombre' => $texto,
+                'tipo' => $tipo,
+                'gestion' => $doc->gestion_,
+                'usuario' => ['name' => $usuario],
+                'ruta' => $rutaWeb,
+                'created_at' => $doc->created_at->format('Y-m-d'),
+            ];
+        });
+
+        // Datos únicos para los selectores de filtro
+        $tipos = TipoDocumentoDetalle::pluck('Nombre')->unique()->values();
+        $gestiones = Documento::pluck('gestion_')->unique()->sortDesc()->values();
+
+        return inertia('BuscadorSemantico/BuscadorDocumentos', compact('documentos', 'tipos', 'gestiones'));
+    }
+
+
 }

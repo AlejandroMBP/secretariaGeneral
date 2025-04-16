@@ -101,6 +101,12 @@ const mainNavItems: NavItem[] = [
     },
 
     {
+        title: 'Buscador Semantico',
+        href: '/documentos/buscar',
+        icon: FileWarning,
+    },
+
+    {
         title: 'Otros',
         icon: ListPlus,
         children: [
