@@ -1,4 +1,4 @@
-import { documentHeaders } from '@/hooks/documentHeaders';
+import { convenioHeaders } from '@/hooks/convenioHeaders';
 import AppLayout from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
 import TableComponent from '../Documentos/TableComponent';
@@ -34,7 +34,7 @@ export default function Listar() {
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
                     <h2 className="mb-4 text-xl font-bold">Lista de Documentos Cargados</h2>
-                    <TableComponent headers={documentHeaders} data={documentos} />
+                    <TableComponent headers={convenioHeaders} data={documentos} />
                 </div>
             </div>
         </AppLayout>

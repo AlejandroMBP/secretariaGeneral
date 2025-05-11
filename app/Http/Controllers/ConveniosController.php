@@ -15,15 +15,28 @@ class ConveniosController extends Controller
 {
     public function listar()
     {
-        $documentos = Documento::with(['usuario', 'textos', 'tipoDocumento'])
-        ->whereHas('tipoDocumento', function ($query) {
-        $query->where('nombre_tipo', 'Convenios');
-        })
-    ->latest()
-    ->get();
+        $convenio = Convenio::with([
+            'documento.textos:id,documento_id,texto',
+            'documento.tipoDocumentoDetalle'
+        ])
+        ->select('id', 'titulo', 'fecha_inicio', 'fecha_fin', 'adenda', 'documento_id')
+        ->latest()
+        ->get()
+        ->map(function ($resoluciones) {
+            return [
+                'id'                => $resoluciones->id,
+                'titulo'            => $resoluciones->titulo,
+                'fecha_inicio'      => $resoluciones->fecha_inicio,
+                'fecha_fin'         => $resoluciones->fecha_fin,
+                'adenda'            => $resoluciones->adenda?? 'sin adenda',
+                'documento_id'      => $resoluciones->documento->tipoDocumentoDetalle->Nombre ?? 'No definido',
+                'ruta_de_guardado'  => $resoluciones->documento->ruta_de_guardado ?? null,
+            ];
+        });
+
 
         return Inertia::render('Convenios/Listar', [
-            'documentos' => $documentos
+            'documentos' => $convenio
         ]);
     }
     public function FConvenio()
@@ -69,10 +82,8 @@ class ConveniosController extends Controller
             ]);
 
             $documento = new Documento();
-            $documento->nombre_del_documento = 'de convenios';
             $documento->ruta_de_guardado = $validated['ruta_temporal'];
             $documento->tipo_documento_detalle_id = $validated['detalleDocumentoId'] ?? null;
-            $documento->lo_que_resuelve = 'quitar';
             $documento->tipo_archivo = 'pdf';
             $documento->gestion_ = now();
             $documento->usuario_id = Auth::id();

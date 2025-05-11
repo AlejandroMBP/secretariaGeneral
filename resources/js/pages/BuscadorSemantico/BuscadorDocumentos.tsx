@@ -1,62 +1,17 @@
 import AppLayout from '@/layouts/app-layout';
+import { Documento } from '@/types/interfaces';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { PageProps } from 'react-pdf';
+import { useDebounce } from 'use-debounce';
 
-// Función para truncar y resaltar coincidencias
-const renderNombre = (nombre: string, search: string) => {
-    const maxLength = 80;
-
-    if (!search) {
-        const truncated = nombre.length > maxLength ? nombre.slice(0, maxLength) + '...' : nombre;
-        return <span>{truncated}</span>;
-    }
-
-    const regex = new RegExp(`(${search})`, 'gi');
-    const parts = nombre.split(regex);
-
-    const highlighted = parts.map((part, idx) =>
-        regex.test(part) ? (
-            <mark key={idx} className="bg-yellow-300 text-black">
-                {part}
-            </mark>
-        ) : (
-            part
-        ),
-    );
-
-    const result = highlighted.reduce((acc: any[], part, index) => {
-        const total = acc.reduce((sum, el) => sum + (typeof el === 'string' ? el.length : 0), 0);
-        if (total < maxLength) {
-            acc.push(part);
-        }
-        return acc;
-    }, []);
-
-    const totalLength = result.reduce((sum, el) => sum + (typeof el === 'string' ? el.length : 0), 0);
-    const needsEllipsis = totalLength < nombre.length;
-
-    return (
-        <span>
-            {result}
-            {needsEllipsis && '...'}
-        </span>
-    );
-};
-
-interface Documento {
-    id: number;
-    nombre: string;
-    tipo: string;
-    gestion: string;
-    usuario: { name: string };
-    ruta: string;
-    created_at: string;
-}
-
-interface Props {
+interface Props extends PageProps {
     documentos: Documento[];
     tipos: string[];
     gestiones: string[];
+    gestion_resolucion: string[];
+    [key: string]: any;
 }
 
 export default function BuscarDocumentos() {
@@ -64,11 +19,38 @@ export default function BuscarDocumentos() {
     const [search, setSearch] = useState('');
     const [tipo, setTipo] = useState('');
     const [gestion, setGestion] = useState('');
+    const [gestion_resolucion, setGestionResolucion] = useState('');
+    const [hasSearched, setHasSearched] = useState(false);
+    // Usamos debounce para evitar hacer muchas solicitudes mientras se escribe
+    const [debouncedSearch] = useDebounce(search, 500);
+    const [debouncedTipo] = useDebounce(tipo, 500);
+    const [debouncedGestion] = useDebounce(gestion, 500);
+    const [debouncedGestionResolucion] = useDebounce(gestion_resolucion, 500);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get('/documentos/buscar', { search, tipo, gestion }, { preserveState: true });
-    };
+    useEffect(() => {
+        // Verificamos si hay algún filtro activo
+        const hasFilters = debouncedSearch || debouncedTipo || debouncedGestion || debouncedGestionResolucion;
+
+        if (hasFilters) {
+            router.get(
+                '/documentos/buscar',
+                {
+                    search: debouncedSearch,
+                    tipo: debouncedTipo,
+                    gestion: debouncedGestion,
+                    gestion_resolucion: debouncedGestionResolucion,
+                },
+                {
+                    preserveState: true,
+                    replace: true,
+                },
+            );
+            setHasSearched(true);
+        } else {
+            // Si no hay filtros, limpiamos los resultados
+            setHasSearched(false);
+        }
+    }, [debouncedSearch, debouncedTipo, debouncedGestion, debouncedGestionResolucion]);
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Buscar Documentos', href: '/documentos/buscar' }]}>
@@ -78,96 +60,161 @@ export default function BuscarDocumentos() {
                 {/* Formulario de búsqueda */}
                 <div className="dark:bg-sidebar rounded-xl bg-white p-6 shadow-md">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Búsqueda de Documentos</h1>
-
-                    <form onSubmit={handleSearch} className="mt-4 flex flex-wrap gap-4">
-                        <input
-                            type="text"
-                            placeholder="Buscar por texto..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-indigo-500 focus:outline-none md:w-1/3 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        />
-                        <select
-                            value={tipo}
-                            onChange={(e) => setTipo(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-indigo-500 focus:outline-none md:w-1/4 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="">Todos los Tipos</option>
-                            {tipos.map((t, idx) => (
-                                <option key={idx} value={t}>
-                                    {t}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            value={gestion}
-                            onChange={(e) => setGestion(e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm focus:border-indigo-500 focus:outline-none md:w-1/4 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="">Todas las Gestiones</option>
-                            {gestiones.map((g, idx) => (
-                                <option key={idx} value={g}>
-                                    {g}
-                                </option>
-                            ))}
-                        </select>
-                        <button
-                            type="submit"
-                            className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white shadow transition duration-200 hover:bg-indigo-700"
-                        >
-                            Buscar
-                        </button>
-                    </form>
+                    <div className="container mx-auto p-4">
+                        {/* buscador principal */}
+                        <div className="mb-6 flex items-center justify-center">
+                            <div className="relative w-full max-w-xl">
+                                <Search className="absolute top-2.5 left-3 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por texto..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full rounded-xl border border-gray-300 py-2 pr-4 pl-10 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+                        <div className="mb-6 flex flex-wrap justify-center gap-4">
+                            <select
+                                value={tipo}
+                                onChange={(e) => setTipo(e.target.value)}
+                                className="dark:bg-sidebar w-full rounded-md border border-gray-300 p-2 px-4 py-2 shadow-sm focus:border-indigo-500 focus:outline-none md:w-1/4 dark:border-gray-600 dark:text-white"
+                            >
+                                <option value="">Todos los Tipos</option>
+                                {tipos.map((t, idx) => (
+                                    <option key={idx} value={t}>
+                                        {t}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                value={gestion}
+                                onChange={(e) => setGestion(e.target.value)}
+                                className="dark:bg-sidebar w-full rounded-md border border-gray-300 p-2 px-4 py-2 shadow-sm focus:border-indigo-500 focus:outline-none md:w-1/4 dark:border-gray-600 dark:text-white"
+                            >
+                                <option value="">Todas las Gestiones</option>
+                                {gestiones.map((g, idx) => (
+                                    <option key={idx} value={g}>
+                                        {g}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Resultados */}
-                <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
-                    <h2 className="mb-4 text-xl font-bold">Resultados</h2>
+                {hasSearched ? (
+                    documentos.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            {documentos.map((doc) => (
+                                <div
+                                    key={doc.id}
+                                    className="dark:bg-sidebar rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-300 dark:border-gray-700"
+                                >
+                                    {/* ... (código de la tarjeta igual que antes) ... */}
+                                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                        {/* Resolución */}
+                                        {doc.tipo_documento && (
+                                            <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+                                                {doc.tipo_documento}
+                                            </span>
+                                        )}
+                                        {doc.gestion_resolucion && (
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">{doc.gestion_resolucion}</span>
+                                        )}
+                                        {doc.numero_resolucion && (
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">{doc.numero_resolucion}</span>
+                                        )}
 
-                    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                        <table className="min-w-full text-left text-sm">
-                            <thead className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                                <tr>
-                                    <th className="px-4 py-2">Nombre</th>
-                                    <th className="px-4 py-2">Tipo</th>
-                                    <th className="px-4 py-2">Gestión</th>
-                                    <th className="px-4 py-2">Usuario</th>
-                                    <th className="px-4 py-2">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {documentos.map((doc) => (
-                                    <tr
-                                        key={doc.id}
-                                        className="border-t border-gray-200 transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-                                    >
-                                        <td className="px-4 py-2">{renderNombre(doc.nombre, search)}</td>
-                                        <td className="px-4 py-2">{doc.tipo}</td>
-                                        <td className="px-4 py-2">{doc.gestion}</td>
-                                        <td className="px-4 py-2">{doc.usuario.name}</td>
-                                        <td className="px-4 py-2">
+                                        {/* Diploma */}
+                                        {doc.numero_serie && <span className="text-sm text-gray-500 dark:text-gray-400">{doc.numero_serie}</span>}
+                                        {doc.carrera && <span className="text-sm text-gray-500 dark:text-gray-400">{doc.carrera}</span>}
+
+                                        {/* antiAutonimista */}
+                                        {doc.cedula_de_identidad && (
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">{doc.cedula_de_identidad}</span>
+                                        )}
+                                        {doc.anti_tipo && <span className="text-sm text-gray-500 dark:text-gray-400">{doc.anti_tipo}</span>}
+
+                                        {/* Autoridad */}
+                                        {doc.gestion && <span className="text-sm text-gray-500 dark:text-gray-400">{doc.gestion}</span>}
+                                        {doc.autoridad_tipo_posicio && (
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">{doc.autoridad_tipo_posicio}</span>
+                                        )}
+                                    </div>
+
+                                    {/* Títulos por tipo */}
+                                    {doc.resolucion_nombre && (
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doc.resolucion_nombre}</h3>
+                                    )}
+                                    {doc.convenio_titulo && (
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doc.convenio_titulo}</h3>
+                                    )}
+                                    {doc.diploma_nombre && (
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doc.diploma_nombre}</h3>
+                                    )}
+                                    {doc.anti_nombre && <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doc.anti_nombre}</h3>}
+                                    {doc.autoridad_nombre && (
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doc.autoridad_nombre}</h3>
+                                    )}
+
+                                    {/* Descripciones o contenido relevante */}
+                                    {doc.resolucion_lo_que_resuelve && (
+                                        <p className="mt-2 text-sm font-bold text-purple-800 dark:text-purple-400">
+                                            {doc.resolucion_lo_que_resuelve}
+                                        </p>
+                                    )}
+                                    {/* Adenda */}
+                                    {doc.fecha_inicio && (
+                                        <p className="mt-2 text-sm font-bold text-purple-800 dark:text-purple-400">
+                                            Fecha inicio: {doc.fecha_inicio}
+                                        </p>
+                                    )}
+                                    {doc.fecha_fin && (
+                                        <p className="mt-2 text-sm font-bold text-purple-800 dark:text-purple-400">Fecha fin: {doc.fecha_fin}</p>
+                                    )}
+                                    {doc.adenda && <p className="mt-2 text-sm font-bold text-purple-800 dark:text-purple-400">{doc.adenda}</p>}
+
+                                    {/* Diploma */}
+                                    {doc.fecha_nacimiento && (
+                                        <p className="mt-2 text-sm font-bold text-purple-800 dark:text-purple-400">
+                                            Nacimiento: {doc.fecha_nacimiento}
+                                        </p>
+                                    )}
+                                    {doc.fecha_emision && (
+                                        <p className="mt-2 text-sm font-bold text-purple-800 dark:text-purple-400">Emisión: {doc.fecha_emision}</p>
+                                    )}
+
+                                    {/* Texto buscado */}
+                                    {doc.texto && <p className="mt-2 line-clamp-5 text-sm text-gray-600 dark:text-gray-300">{doc.texto}</p>}
+
+                                    {/* Botón Ver/Descargar */}
+                                    <div className="mt-4">
+                                        {doc.ruta && (
                                             <a
                                                 href={doc.ruta}
-                                                className="text-indigo-600 hover:underline dark:text-indigo-400"
+                                                className="inline-block rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 dark:hover:bg-blue-500"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
                                                 Ver/Descargar
                                             </a>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {documentos.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="py-4 text-center text-gray-500 dark:text-gray-300">
-                                            No se encontraron documentos.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="py-10 text-center">
+                            <p className="text-gray-500 dark:text-gray-400">No se encontraron documentos con los filtros seleccionados</p>
+                        </div>
+                    )
+                ) : (
+                    <div className="py-10 text-center">
+                        <p className="text-gray-500 dark:text-gray-400">Ingrese algún término de búsqueda o seleccione filtros para ver resultados</p>
                     </div>
-                </div>
+                )}
             </div>
         </AppLayout>
     );

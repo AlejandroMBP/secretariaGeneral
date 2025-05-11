@@ -1,8 +1,10 @@
-import { documentHeaders } from '@/hooks/documentHeaders';
+import ButtonAction from '@/components/propios/ActionButton';
+import AntiAutonomistaFormModal from '@/components/propios/ModalAntiautonomista';
+import { antiAutonomistaHeaders } from '@/hooks/antiAutonomistasHeaders';
 import AppLayout from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import TableComponent from '../Documentos/TableComponent';
-
 interface Documento {
     id: number;
     nombre: string;
@@ -20,6 +22,8 @@ interface Props {
 }
 
 export default function Listar() {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const { documentos } = usePage<Props>().props;
 
     return (
@@ -33,10 +37,14 @@ export default function Listar() {
                     </p>
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
-                    <h2 className="mb-4 text-xl font-bold">Lista de Documentos Cargados</h2>
-                    <TableComponent headers={documentHeaders} data={documentos} />
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-xl font-bold">Lista de Documentos Cargados</h2>
+                        <ButtonAction onClick={() => setIsModalOpen(true)}>Registrar a Anti-Autonomista</ButtonAction>
+                    </div>
+                    <TableComponent headers={antiAutonomistaHeaders} data={documentos} />
                 </div>
             </div>
+            <AntiAutonomistaFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </AppLayout>
     );
 }

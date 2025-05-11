@@ -2,7 +2,6 @@ import { AreaBar } from '@/components/charts/AreaBar';
 import { Component } from '@/components/charts/horizontalBar';
 import { PieChart } from '@/components/charts/pieChart';
 import { VerticalBarr } from '@/components/charts/verticalBar';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';

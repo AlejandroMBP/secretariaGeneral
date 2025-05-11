@@ -107,13 +107,12 @@ class Documento extends Model
             $data['numero_serie'] = $this->diploma->numero_serie;
             $data['carrera'] = $this->diploma->carrera;
             $data['diploma_nombre'] = $this->diploma->nombres . ' ' . $this->diploma->apellidos;
-            $data['diploma_carrera'] = $this->diploma->carrera;
             $data['fecha_nacimiento'] = $this->diploma->fecha_nacimiento;
             $data['fecha_emision'] = $this->diploma->fecha_emision;
         }
         if ($this->antiAutonomista) {
             $data['cedula_de_identidad'] = $this->antiAutonomista->ci;
-            $data['anti_nombre'] = $this->antiAutonomista->nombres . ' ' . $this->antiAutonomista->apellidos;
+            $data['anti_nombre'] = trim(optional($this->antiAutonomista)->nombres . ' ' . optional($this->antiAutonomista)->apellidos);
             $data['anti_tipo'] = $this->antiAutonomista->tipoPersona;
         }
         if ($this->autoridad) {
@@ -124,4 +123,9 @@ class Documento extends Model
         }
         return $data;
     }
+    public function getDatosIndexados()
+    {
+        return $this->toSearchableArray();
+    }
+
 }

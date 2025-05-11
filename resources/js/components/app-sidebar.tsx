@@ -4,26 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import {
-    BookMarked,
-    BookOpen,
-    BookUser,
-    Contact,
-    FileArchive,
-    FileBadge,
-    FilePlus,
-    FilePlus2,
-    FileStack,
-    FileWarning,
-    Folder,
-    Gavel,
-    Handshake,
-    LayoutGrid,
-    ListPlus,
-    NotebookPen,
-    Users,
-    UsersRound,
-} from 'lucide-react';
+import { BookOpen, FileArchive, FileBadge, FilePlus2, FileWarning, Folder, Gavel, Handshake, LayoutGrid, ListPlus, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -42,57 +23,22 @@ const mainNavItems: NavItem[] = [
         href: '/usuarios',
         icon: BookOpen,
     },
-    {
-        title: 'Carga de documentos',
-        href: '/documentos',
-        icon: FilePlus,
-    },
+
     {
         title: 'Carga Archivos',
         href: '/archivos',
         icon: FilePlus2,
     },
+
     {
-        title: 'Documentos',
-        href: '/documentos-listar',
-        icon: FileStack,
-    },
-    {
-        title: 'Diplomas academicos',
+        title: 'Diplomas',
+        href: '/Diplomas-Cards',
         icon: FileBadge,
-        children: [
-            {
-                title: 'Bachiller',
-                href: '/Bachiller-listar',
-                icon: Contact,
-            },
-            {
-                title: 'Academicos',
-                href: '/Academicos-listar',
-                icon: UsersRound,
-            },
-            {
-                title: 'Profesionales',
-                href: '/Profesionales-listar',
-                icon: BookUser,
-            },
-        ],
     },
     {
         title: 'Resoluciones',
+        href: '/Resoluciones-Cards',
         icon: FileArchive,
-        children: [
-            {
-                title: 'HCU.',
-                href: '/Hcu-listar',
-                icon: BookMarked,
-            },
-            {
-                title: 'Rectorales',
-                href: '/Rectorales-listar',
-                icon: NotebookPen,
-            },
-        ],
     },
     {
         title: 'Anti-Autonomistas',

@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Documento;
 use App\Models\Resolucion;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class HCUController extends Controller
+class agdeController extends Controller
 {
     public function listar()
     {
@@ -17,7 +16,7 @@ class HCUController extends Controller
             'documento.tipoDocumentoDetalle'
     ])
         ->whereHas('documento.tipoDocumentoDetalle', function($query){
-            $query->where('Nombre','HCU');
+            $query->where('Nombre','AGDE');
         })
         ->select('id', 'numero_resolucion', 'nombre_del_documento', 'lo_que_resuelve', 'gestion', 'documento_id', 'd_a_documento_id')
         ->latest()
@@ -35,7 +34,7 @@ class HCUController extends Controller
             ];
         });
 
-        return Inertia::render('resoluciones/HCU/Listar', [
+        return Inertia::render('resoluciones/Agde/Listar', [
             'documentos' => $resolucion
         ]);
     }

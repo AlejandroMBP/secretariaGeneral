@@ -1,7 +1,7 @@
 import { documentHeaders } from '@/hooks/documentHeaders';
 import AppLayout from '@/layouts/app-layout';
+import TableComponent from '@/pages/Documentos/TableComponent';
 import { Head, usePage } from '@inertiajs/react';
-import TableComponent from '../Documentos/TableComponent';
 
 interface Documento {
     id: number;

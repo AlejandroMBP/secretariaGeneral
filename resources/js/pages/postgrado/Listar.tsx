@@ -23,17 +23,17 @@ export default function Listar() {
     const { documentos } = usePage<Props>().props;
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Académicos', href: '/Academicos' }]}>
-            <Head title="Diplomas Académicos" />
+        <AppLayout breadcrumbs={[{ title: 'Post Grado', href: '/post-grado' }]}>
+            <Head title="Post grado" />
             <div className="flex flex-col gap-6 p-6">
                 <div className="dark:bg-sidebar rounded-xl bg-white p-6 shadow-md">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestión de Diplomas Académicos</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Post grado</h1>
                     <p className="mt-2 text-gray-600 dark:text-gray-300">
-                        Aquí puedes gestionar, cargar y consultar los documentos de los diplomas académicos.
+                        Aquí puedes gestionar y consultar los documentos relacionados con los diplomas de post grado.
                     </p>
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
-                    <h2 className="mb-4 text-xl font-bold">Lista de Documentos Cargados</h2>
+                    <h2 className="mb-4 text-xl font-bold">Lista de diplomas de porst grado cargados</h2>
                     <TableComponent headers={academicosHeaders} data={documentos} />
                 </div>
             </div>

@@ -1,18 +1,23 @@
 <?php
 
 use App\Http\Controllers\AcademicosController;
+use App\Http\Controllers\agdeController;
 use App\Http\Controllers\AntiAutonomistasController;
 use App\Http\Controllers\ArchivosController;
 use App\Http\Controllers\AutoridadesController;
 use App\Http\Controllers\BachilleresController;
+use App\Http\Controllers\CongresoController;
 use App\Http\Controllers\ConsejerosController;
 use App\Http\Controllers\ConveniosController;
 use App\Http\Controllers\DiplomasController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\HCUController;
+use App\Http\Controllers\PostGradoController;
 use App\Http\Controllers\ProfesionalesController;
 use App\Http\Controllers\RectoralesController;
+use App\Http\Controllers\relevacionController;
 use App\Http\Controllers\RolesPermisosController;
+use App\Http\Controllers\supletorioController;
 use App\Http\Controllers\userController;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +44,8 @@ Route::delete('/roles/destroy/{role}', [RolesPermisosController::class, 'destroy
 Route::post('/roles/{role}/permissions', [RolesPermisosController::class, 'assignPermissions'])->name('roles.assignPermissions');
 
 Route::get('/archivos', [ArchivosController::class, 'index'])->name('archivos.index');
+Route::get('/Diplomas-Cards', [ArchivosController::class, 'diplomas'])->name('diplomas.index');
+Route::get('/Resoluciones-Cards', [ArchivosController::class, 'resoluciones'])->name('resoluciones.index');
 
 Route::get('/formulario/resoluciones', [ArchivosController::class,'FResoluciones'])->name('formulario.ver');
 Route::post('/formulario/resoluciones/guardar', [ArchivosController::class,'resoluciones_guardar'])->name('resolucion.guardar');
@@ -60,14 +67,24 @@ Route::delete('/documentos/eliminar/{id}',[DocumentoController::class,'eliminar'
 
 Route::get('/documentos/buscar', [DocumentoController::class, 'buscar'])->name('documentos.buscar');
 
-
+// diplomas
 Route::get('/Bachiller-listar', [BachilleresController::class, 'listar'])->name('bachiller.listar');
-Route::get('/Academicos-listar', [AcademicosController::class, 'listar'])->name('academicos.listar');
-Route::get('/AntiAutonomistas-listar', [AntiAutonomistasController::class, 'listar'])->name('antiAutonomistas.listar');
-Route::get('/Autoridades-listar', [AutoridadesController::class, 'listar'])->name('autoridades.listar');
 Route::get('/Profesionales-listar', [ProfesionalesController::class, 'listar'])->name('profesionales.listar');
+Route::get('/Academicos-listar', [AcademicosController::class, 'listar'])->name('academicos.listar');
+Route::get('/post-grado-listar', [PostGradoController::class, 'listar'])->name('postgrado.listar');
+Route::get('/relevacion-listar', [relevacionController::class, 'listar'])->name('relevacion.listar');
+Route::get('/supletorio-listar', [supletorioController::class, 'listar'])->name('supletorio.listar');
+
+
 Route::get('/Hcu-listar', [HCUController::class, 'listar'])->name('hcu.listar');
 Route::get('/Rectorales-listar', [RectoralesController::class, 'listar'])->name('rectorales.listar');
+Route::get('/Congreso-listar', [CongresoController::class, 'listar'])->name('congreso.listar');
+Route::get('/Agde-listar', [agdeController::class, 'listar'])->name('agde.listar');
+
+
+Route::get('/AntiAutonomistas-listar', [AntiAutonomistasController::class, 'listar'])->name('antiAutonomistas.listar');
+Route::get('/buscar-resolucion',[AntiAutonomistasController::class, 'buscarResolucion']);
+Route::get('/Autoridades-listar', [AutoridadesController::class, 'listar'])->name('autoridades.listar');
 Route::get('/Convenios-listar', [ConveniosController::class, 'listar'])->name('Convenios.listar');
 Route::get('/Consejeros-listar', [ConsejerosController::class, 'listar'])->name('consejeros.listar');
 

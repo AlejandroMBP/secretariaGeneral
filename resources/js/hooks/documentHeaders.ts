@@ -4,10 +4,14 @@ export const documentHeaders = [
         key: 'nro',
     },
     {
-        label: 'Nombre del documento',
-        key: 'nombre_del_documento',
+        label: 'Numero de resolucion',
+        key: 'numero_resolucion',
     },
 
+    {
+        label: 'Titulo de la resolucion',
+        key: 'nombre_del_documento',
+    },
     {
         label: 'Lo que resuelve',
         key: 'lo_que_resuelve',
@@ -15,10 +19,6 @@ export const documentHeaders = [
     {
         label: 'Gestion de resolucion',
         key: 'gestion',
-    },
-    {
-        label: 'Resoluciones',
-        key: 'tipo_documento',
     },
     {
         label: 'Observacion',

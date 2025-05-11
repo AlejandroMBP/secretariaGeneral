@@ -21,6 +21,14 @@ class ArchivosController extends Controller
         return Inertia::render('Archivos/index',[
             'tipoDocumentos' => $tipoDocumentos,]);
     }
+    public function diplomas()
+    {
+        return Inertia::render('Diplomas/index',);
+    }
+    public function resoluciones()
+    {
+        return Inertia::render('resoluciones/index',);
+    }
     public function FResoluciones()
 {
     $tipoDocumentos = TipoDocumento::with('detalles')
