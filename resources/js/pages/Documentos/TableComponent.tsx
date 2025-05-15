@@ -10,7 +10,7 @@ import Search from '@/components/propios/Search';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/shadcn/table';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
-import { MoreHorizontal, Pencil, Printer, ScanEye, Trash } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, ScanEye } from 'lucide-react';
 import { useState } from 'react';
 import EditModal from './EditarModal';
 
@@ -183,13 +183,13 @@ const TableComponent: React.FC<TableComponentProps> = ({
                                                     <Pencil className="h-4 w-4 text-green-500" />
                                                     <span>Editar</span>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem
+                                                {/* <DropdownMenuItem
                                                     onClick={() => handleDelete(row.id)}
                                                     className="flex cursor-pointer items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                 >
                                                     <Trash className="h-4 w-4 text-red-500" />
                                                     <span>Eliminar</span>
-                                                </DropdownMenuItem>
+                                                </DropdownMenuItem> */}
                                                 <DropdownMenuItem
                                                     onClick={() => handlePrint(row.ruta_de_guardado)}
                                                     className="flex cursor-pointer items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
