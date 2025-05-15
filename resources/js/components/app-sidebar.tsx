@@ -4,74 +4,59 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, FileArchive, FileBadge, FilePlus2, FileWarning, Folder, Gavel, Handshake, LayoutGrid, ListPlus, Users } from 'lucide-react';
+import { FileSignature, FileText, GraduationCap, LayoutGrid, SearchCode, Shield, Upload, UserCog, Users, UserX } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Graficas',
         href: '/dashboard',
         icon: LayoutGrid,
     },
     {
         title: 'Permisos',
         href: '/roles',
-        icon: Folder,
+        icon: Shield, // Mejor representa permisos/roles
     },
     {
         title: 'Usuarios',
         href: '/usuarios',
-        icon: BookOpen,
+        icon: Users, // Más representativo para usuarios
     },
-
     {
         title: 'Carga Archivos',
         href: '/archivos',
-        icon: FilePlus2,
+        icon: Upload, // Mejor para acción de carga
     },
-
     {
         title: 'Diplomas',
         href: '/Diplomas-Cards',
-        icon: FileBadge,
+        icon: GraduationCap, // Ideal para diplomas
     },
     {
         title: 'Resoluciones',
         href: '/Resoluciones-Cards',
-        icon: FileArchive,
+        icon: FileText, // Mejor para documentos oficiales
     },
     {
         title: 'Anti-Autonomistas',
         href: '/AntiAutonomistas-listar',
-        icon: FileWarning,
+        icon: UserX, // Representa personas no autorizadas
     },
-
     {
-        title: 'Buscador Semantico',
+        title: 'Convenios',
+        href: '/Convenios-listar',
+        icon: FileSignature, // Mejor para acuerdos
+    },
+    {
+        title: 'Autoridades',
+        href: '/Autoridades-listar',
+        icon: UserCog, // Representa usuarios con privilegios
+    },
+    {
+        title: 'Buscador Semántico',
         href: '/documentos/buscar',
-        icon: FileWarning,
-    },
-
-    {
-        title: 'Otros',
-        icon: ListPlus,
-        children: [
-            {
-                title: 'Convenios',
-                href: '/Convenios-listar',
-                icon: Handshake,
-            },
-            {
-                title: 'Consejeros',
-                href: '/Consejeros-listar',
-                icon: Users,
-            },
-            {
-                title: 'Autoridades',
-                href: '/Autoridades-listar',
-                icon: Gavel,
-            },
-        ],
+        icon: SearchCode, // Específico para búsqueda avanzada
     },
 ];
 

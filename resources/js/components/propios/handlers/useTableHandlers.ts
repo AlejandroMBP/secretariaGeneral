@@ -16,6 +16,9 @@ interface HandlersProps {
     setSearchTerm: (term: string) => void;
     setCurrentPage: (page: number) => void;
     setData: React.Dispatch<React.SetStateAction<any[]>>;
+    apiEndpoint?: string; // Nueva prop para la ruta base de la API
+    customEditHandler?: (data: any) => Promise<void>; // Manejador personalizado opcional
+    customDeleteHandler?: (id: number) => Promise<void>; // Manejador personalizado para eliminar
 }
 
 export const createTableHandlers = ({
@@ -27,6 +30,9 @@ export const createTableHandlers = ({
     setSearchTerm,
     setCurrentPage,
     setData,
+    apiEndpoint,
+    customEditHandler,
+    customDeleteHandler,
 }: HandlersProps) => {
     const handleViewPDF = async (ruta: string) => {
         try {
@@ -78,31 +84,54 @@ export const createTableHandlers = ({
     const handleDelete = async (id: number) => {
         try {
             nProgress.start();
-            const response = await axios.delete(route('documentos.eliminar', id));
+
+            if (customDeleteHandler) {
+                await customDeleteHandler(id);
+            } else if (apiEndpoint) {
+                await axios.delete(`${apiEndpoint}/${id}`);
+            } else {
+                throw new Error('No se configuró un endpoint para eliminar');
+            }
+
             setData((prevData) => prevData.filter((item) => item.id !== id));
-            setAlert({ message: response.data.message, type: 'success' });
-        } catch (error) {
-            setAlert({ message: 'Algo pasó al eliminar el archivo, inténtelo más tarde.', type: 'error' });
+            setAlert({ message: 'Registro eliminado con éxito', type: 'success' });
+        } catch (error: any) {
+            setAlert({
+                message: error.response?.data?.message || 'Error al eliminar el registro',
+                type: 'error',
+            });
         } finally {
             nProgress.done();
         }
     };
 
-    const handleSaveEdit = async (updatedData: any) => {
+    const handleSaveEdit = async (editedData: any) => {
         try {
             nProgress.start();
-            const response = await axios.put(route('documento.editar'), updatedData);
-            setData((prevData) => prevData.map((item) => (item.id === updatedData.id ? { ...item, ...updatedData } : item)));
-            setAlert({ message: response.data.message, type: 'success' });
-            setValidationErrors({});
+
+            if (customEditHandler) {
+                await customEditHandler(editedData);
+            } else if (apiEndpoint) {
+                const response = await axios.put(`${apiEndpoint}/${editedData.id}`, editedData);
+
+                // Actualizar los datos en el estado
+                setData((prevData) => prevData.map((item) => (item.id === editedData.id ? response.data : item)));
+            } else {
+                throw new Error('No se configuró un endpoint para guardar los cambios');
+            }
+
+            setAlert({ message: 'Cambios guardados con éxito', type: 'success' });
             setIsEditModalOpen(false);
+            window.location.reload();
         } catch (error: any) {
-            if (error.response && error.response.status === 422) {
+            if (error.response?.status === 422) {
                 setValidationErrors(error.response.data.errors);
             } else {
-                setAlert({ message: 'Error al editar el documento.', type: 'error' });
+                setAlert({
+                    message: error.response?.data?.message || 'Error al guardar los cambios',
+                    type: 'error',
+                });
             }
-            console.error('Error al guardar los cambios:', error);
         } finally {
             nProgress.done();
         }

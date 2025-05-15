@@ -48,7 +48,7 @@ export default function DocumentosFormulario() {
                     <FormularioCard
                         title="Certificados supletorios"
                         description="Gestión de certificados supletorios y especiales"
-                        href="/Rectorales-listar"
+                        href="/supletorio-listar"
                         Icon={FileCheck}
                     />
                 </div>

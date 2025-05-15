@@ -9,6 +9,9 @@ use App\Http\Controllers\BachilleresController;
 use App\Http\Controllers\CongresoController;
 use App\Http\Controllers\ConsejerosController;
 use App\Http\Controllers\ConveniosController;
+use App\Http\Controllers\DashboardAreaController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardPastelController;
 use App\Http\Controllers\DiplomasController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\HCUController;
@@ -81,13 +84,26 @@ Route::get('/Rectorales-listar', [RectoralesController::class, 'listar'])->name(
 Route::get('/Congreso-listar', [CongresoController::class, 'listar'])->name('congreso.listar');
 Route::get('/Agde-listar', [agdeController::class, 'listar'])->name('agde.listar');
 
+Route::put('hcu-update/{id}',[HCUController::class,'update'])->name('hcu.update');
+Route::put('diplomas-update/{id}',[BachilleresController::class, 'update']);
 
 Route::get('/AntiAutonomistas-listar', [AntiAutonomistasController::class, 'listar'])->name('antiAutonomistas.listar');
+Route::put('/Anti-update/{id}',[AntiAutonomistasController::class,'update']);
+
 Route::get('/buscar-resolucion',[AntiAutonomistasController::class, 'buscarResolucion']);
+Route::post('/cargar-anti',[AntiAutonomistasController::class,'store']);
+
 Route::get('/Autoridades-listar', [AutoridadesController::class, 'listar'])->name('autoridades.listar');
+Route::put("/Autoridades-update/{id}",[AutoridadesController::class,'update']);
+Route::post('/cargar-autoridad',[AutoridadesController::class,'store']);
 Route::get('/Convenios-listar', [ConveniosController::class, 'listar'])->name('Convenios.listar');
+Route::put('/convenios-update/{id}',[ConveniosController::class,'update'])->name('convenio.update');
 Route::get('/Consejeros-listar', [ConsejerosController::class, 'listar'])->name('consejeros.listar');
 
+Route::get('/stats/monthly-activity', [DashboardController::class, 'monthlyActivity']);
+Route::get('/stats/document-activity', [DashboardAreaController::class, 'documentActivity']);
+Route::get('/document-stats', [DashboardPastelController::class, 'getDocumentStats']);
+Route::get('/estadisticas-documentos', [DashboardPastelController::class, 'estadisticas']);
 });
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

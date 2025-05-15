@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Password settings',
+        title: 'Configuración de contraseña',
         href: '/settings/password',
     },
 ];
@@ -50,11 +50,14 @@ export default function Password() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
+            <Head title="Configuración de contraseña" />
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title="Actualizar contraseña" description="Asegúrese de que su cuenta utilice una contraseña larga y aleatoria para mantener la seguridad" />
+                    <HeadingSmall
+                        title="Actualizar contraseña"
+                        description="Asegúrese de que su cuenta utilice una contraseña larga y aleatoria para mantener la seguridad"
+                    />
 
                     <form onSubmit={updatePassword} className="space-y-6">
                         <div className="grid gap-2">
@@ -68,7 +71,7 @@ export default function Password() {
                                 type="password"
                                 className="mt-1 block w-full"
                                 autoComplete="current-password"
-                                placeholder="Current password"
+                                placeholder="Contraseña actual"
                             />
 
                             <InputError message={errors.current_password} />
@@ -85,7 +88,7 @@ export default function Password() {
                                 type="password"
                                 className="mt-1 block w-full"
                                 autoComplete="new-password"
-                                placeholder="New password"
+                                placeholder="Nueva contraseña"
                             />
 
                             <InputError message={errors.password} />
@@ -101,14 +104,14 @@ export default function Password() {
                                 type="password"
                                 className="mt-1 block w-full"
                                 autoComplete="new-password"
-                                placeholder="Confirm password"
+                                placeholder="Confirmar contraseña"
                             />
 
                             <InputError message={errors.password_confirmation} />
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>guardar contraseña</Button>
+                            <Button disabled={processing}>Guardar contraseña</Button>
 
                             <Transition
                                 show={recentlySuccessful}

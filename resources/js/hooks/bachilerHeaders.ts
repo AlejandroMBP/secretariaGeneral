@@ -17,6 +17,10 @@ export const bachillerHeaders = [
         key: 'fecha_nacimiento',
     },
     {
+        label: 'fecha de emision',
+        key: 'fecha_emision',
+    },
+    {
         label: 'Carrera',
         key: 'carrera',
     },

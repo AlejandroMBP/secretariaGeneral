@@ -3,7 +3,6 @@ import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
-import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import SettingsLayout from '@/layouts/settings/layout';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: 'Configuración de perfil',
         href: '/settings/profile',
     },
 ];
@@ -22,7 +21,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 type ProfileForm = {
     name: string;
     email: string;
-}
+};
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
@@ -42,7 +41,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
+            <Head title="Configuración de perfil" />
 
             <SettingsLayout>
                 <div className="space-y-6">

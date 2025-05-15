@@ -8,6 +8,7 @@ use App\Models\DocumentoTexto;
 use App\Models\TipoDocumento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -17,12 +18,16 @@ class ConveniosController extends Controller
     {
         $convenio = Convenio::with([
             'documento.textos:id,documento_id,texto',
-            'documento.tipoDocumentoDetalle'
+            'documento.tipoDocumentoDetalle',
+            'documento.tipoDocumentoDetalle:id,Nombre',
         ])
         ->select('id', 'titulo', 'fecha_inicio', 'fecha_fin', 'adenda', 'documento_id')
         ->latest()
         ->get()
         ->map(function ($resoluciones) {
+            $documento = $resoluciones->documento;
+            $texto = $documento->textos->first();
+
             return [
                 'id'                => $resoluciones->id,
                 'titulo'            => $resoluciones->titulo,
@@ -31,6 +36,10 @@ class ConveniosController extends Controller
                 'adenda'            => $resoluciones->adenda?? 'sin adenda',
                 'documento_id'      => $resoluciones->documento->tipoDocumentoDetalle->Nombre ?? 'No definido',
                 'ruta_de_guardado'  => $resoluciones->documento->ruta_de_guardado ?? null,
+                'texto_id'              => $texto ? $texto->id : null, // ID del texto
+                'texto_contenido'       => $texto ? $texto->texto : null, // Contenido del texto
+                'tipo_documento'        => $documento->tipoDocumentoDetalle->Nombre ?? null
+
             ];
         });
 
@@ -94,6 +103,9 @@ class ConveniosController extends Controller
                     'documento_id' => $documento->id,
                     'texto' => $request->texto_extraido,
                 ]);
+                $documento->load('textos', 'tipoDocumentoDetalle');
+
+                $documento->searchable();
             }
 
             $convenio = Convenio::create([
@@ -118,5 +130,70 @@ class ConveniosController extends Controller
             ], 500);
         }
     }
+    public function update(Request $request, $id)
+    {
+        // Validar los datos recibidos
+        $validated = $request->validate([
+            'titulo' => 'required|string|max:255',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+            'adenda' => 'nullable|string',
+            'tipo_documento' => 'required|string',
+            'texto_contenido' => 'required|string',
+        ]);
 
+        DB::beginTransaction();
+
+        try {
+            // 1. Encontrar el convenio y su documento asociado
+            $convenio = Convenio::findOrFail($id);
+            $documento = $convenio->documento;
+
+            // 2. Actualizar datos del convenio
+            $convenio->update([
+                'titulo' => $validated['titulo'],
+                'fecha_inicio' => $validated['fecha_inicio'],
+                'fecha_fin' => $validated['fecha_fin'],
+                'adenda' => $validated['adenda'] === 'sin adenda' ? null : $validated['adenda'],
+            ]);
+
+            // 3. Actualizar el tipo de documento si existe
+            if ($documento && $documento->tipoDocumentoDetalle) {
+                $documento->tipoDocumentoDetalle->update([
+                    'Nombre' => $validated['tipo_documento']
+                ]);
+            }
+
+            // 4. Actualizar el texto asociado
+            if ($documento && $documento->textos->isNotEmpty()) {
+                $documento->textos()->first()->update([
+                    'texto' => $validated['texto_contenido']
+                ]);
+            }
+
+            DB::commit();
+
+            // Recargar relaciones y hacer searchable si usas Scout
+            $documento->load(['textos', 'tipoDocumentoDetalle']);
+            if (method_exists($documento, 'searchable')) {
+                $documento->searchable();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Convenio actualizado correctamente',
+                'data' => $convenio->fresh(['documento.textos', 'documento.tipoDocumentoDetalle'])
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error al actualizar convenio ID {$id}: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el convenio',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

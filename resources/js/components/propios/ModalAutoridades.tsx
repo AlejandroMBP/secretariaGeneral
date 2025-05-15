@@ -1,12 +1,13 @@
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
+import nProgress from 'nprogress';
 import { Fragment, useEffect, useState } from 'react';
 import CustomAlert from '../CustomAlert';
 import AutocompleteSelect from './AutocompleteSelect';
 import FloatingInput from './FloatingImput';
 import FloatingSelect from './FloatingSelect';
 
-interface AntiAutonomistaFormModalProps {
+interface AutoridadesFormModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
@@ -16,30 +17,35 @@ interface SelectOption {
     label: string;
 }
 
-export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutonomistaFormModalProps) {
+export default function AutoridadFormModal({ isOpen, onClose }: AutoridadesFormModalProps) {
     const { data, setData, post, processing, errors, reset } = useForm({
         nombre: '',
         apellido: '',
-        ci: '',
         numeroRes: '',
-        persona: '',
+        posicion: '',
+        celular: '',
+        gestion: '',
     });
 
     // Opciones fijas para el tipo de persona
     const personasOptions: SelectOption[] = [
-        { value: 'Docente', label: 'Docente' },
-        { value: 'Estudiante', label: 'Estudiante' },
-        { value: 'Administrativo', label: 'Administrativo' },
+        { value: 'HCU', label: 'H.C.U.' },
+        { value: 'AGDE', label: 'A.G.D.E.' },
+        { value: 'CONGRESO', label: 'Congreso' },
     ];
-    const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
+    const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [loadingResoluciones, setLoadingResoluciones] = useState(false);
     const [resoluciones, setResoluciones] = useState([]);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+
     const handleClose = () => {
         reset(); // Limpia el formulario
         setAlert(null); // Limpia cualquier alerta
+        setValidationErrors({}); // Limpia los errores de validación
         onClose(); // Cierra el modal
     };
+
     useEffect(() => {
         const fetchResoluciones = async () => {
             try {
@@ -83,9 +89,9 @@ export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutono
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
+        nProgress.start();
         try {
-            const response = await axios.post('/cargar-anti', data);
+            const response = await axios.post('/cargar-autoridad', data);
 
             if (response.data.success) {
                 setAlert({
@@ -93,18 +99,31 @@ export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutono
                     type: 'success',
                 });
                 reset();
-                setTimeout(() => onClose(), 2000);
+                setValidationErrors({});
+                setTimeout(() => {
+                    onClose();
+                    nProgress.done();
+                    window.location.reload();
+                }, 1000);
             } else {
+                nProgress.done();
                 setAlert({
                     message: response.data.message,
                     type: 'error',
                 });
             }
         } catch (error) {
+            nProgress.done();
             let errorMessage = 'Error al procesar la solicitud';
 
             if (axios.isAxiosError(error)) {
-                errorMessage = error.response?.data?.message || errorMessage;
+                if (error.response?.status === 422 && error.response?.data?.errors) {
+                    const validationErrors = error.response.data.errors;
+                    setValidationErrors(validationErrors);
+                    errorMessage = 'Por favor corrige los errores en el formulario';
+                } else {
+                    errorMessage = error.response?.data?.message || errorMessage;
+                }
             }
 
             setAlert({
@@ -127,7 +146,7 @@ export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutono
                 <div className="dark:bg-sidebar w-full max-w-2xl rounded-lg bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
                     {/* Header */}
                     <div className="border-b border-gray-200 p-6 dark:border-gray-700">
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Registrar Anti-Autonomista</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Registrar autoridad</h3>
                     </div>
 
                     {/* Contenido */}
@@ -142,7 +161,7 @@ export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutono
                                     value={data.nombre}
                                     onChange={(e) => setData('nombre', e.target.value)}
                                     required
-                                    error={errors.nombre}
+                                    error={errors.nombre || (validationErrors.nombre && validationErrors.nombre[0])}
                                 />
 
                                 <FloatingInput
@@ -152,20 +171,20 @@ export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutono
                                     value={data.apellido}
                                     onChange={(e) => setData('apellido', e.target.value)}
                                     required
-                                    error={errors.apellido}
+                                    error={errors.apellido || (validationErrors.apellido && validationErrors.apellido[0])}
                                 />
                             </div>
 
                             {/* Columna Derecha */}
                             <div className="space-y-6">
                                 <FloatingInput
-                                    id="ci"
-                                    name="ci"
-                                    label="Carnet"
-                                    value={data.ci}
-                                    onChange={(e) => setData('ci', e.target.value)}
+                                    id="celular"
+                                    name="celular"
+                                    label="Celular"
+                                    value={data.celular}
+                                    onChange={(e) => setData('celular', e.target.value)}
                                     required
-                                    error={errors.ci}
+                                    error={errors.celular || (validationErrors.celular && validationErrors.celular[0])}
                                 />
 
                                 <AutocompleteSelect
@@ -175,24 +194,34 @@ export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutono
                                     value={data.numeroRes}
                                     onChange={(value) => setData('numeroRes', value)}
                                     required
-                                    error={errors.numeroRes}
+                                    error={errors.numeroRes || (validationErrors.numeroRes && validationErrors.numeroRes[0])}
                                     fetchUrl="/buscar-resolucion"
                                 />
                             </div>
-                        </div>
-
-                        {/* Select de Tipo de Persona (ancho completo) */}
-                        <div className="mb-6">
-                            <FloatingSelect
-                                id="persona"
-                                name="persona"
-                                label="Tipo de Persona"
-                                value={data.persona}
-                                onChange={(e) => setData('persona', e.target.value)}
-                                required
-                                error={errors.persona}
-                                options={personasOptions}
-                            />
+                            {/* Select de Tipo de posicion (ancho completo) */}
+                            <div className="mb-6">
+                                <FloatingSelect
+                                    id="posicion"
+                                    name="posicion"
+                                    label="Posicionado"
+                                    value={data.posicion}
+                                    onChange={(e) => setData('posicion', e.target.value)}
+                                    required
+                                    error={errors.posicion || (validationErrors.posicion && validationErrors.posicion[0])}
+                                    options={personasOptions}
+                                />
+                            </div>
+                            <div className="mb-6">
+                                <FloatingInput
+                                    id="gestion"
+                                    name="gestion"
+                                    label="Gestion"
+                                    value={data.gestion}
+                                    onChange={(e) => setData('gestion', e.target.value)}
+                                    required
+                                    error={errors.gestion || (validationErrors.gestion && validationErrors.gestion[0])}
+                                />
+                            </div>
                         </div>
 
                         {/* Footer con botones */}
@@ -207,7 +236,6 @@ export default function AntiAutonomistaFormModal({ isOpen, onClose }: AntiAutono
                             <button
                                 type="submit"
                                 disabled={processing}
-                                onClick={handleSubmit}
                                 className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                             >
                                 {processing ? 'Guardando...' : 'Guardar'}

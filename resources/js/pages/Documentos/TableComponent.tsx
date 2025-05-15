@@ -1,4 +1,8 @@
 import CustomAlert from '@/components/CustomAlert';
+import EditAnti from '@/components/propios/AntiAutonomistaModal';
+import EditAutoridad from '@/components/propios/AutoridadesModal';
+import EditConvenios from '@/components/propios/ConveniosModal';
+import EditModalBachiller from '@/components/propios/EditarModalBachiller';
 import { createTableHandlers } from '@/components/propios/handlers/useTableHandlers';
 import Pagination from '@/components/propios/Pagination';
 import PDFViewerModal from '@/components/propios/PDFModal';
@@ -14,17 +18,30 @@ interface TableComponentProps {
     headers: { label: string; key: string }[];
     data: any[];
     itemsPerPage?: number;
+    apiEndpoint?: string;
+    tipoDocumento: string;
+    customEditHandler?: (data: any) => Promise<void>;
+    customDeleteHandler?: (id: number) => Promise<void>;
 }
 
-const TableComponent: React.FC<TableComponentProps> = ({ headers, data, itemsPerPage = 5 }) => {
+const TableComponent: React.FC<TableComponentProps> = ({
+    headers,
+    data,
+    itemsPerPage = 5,
+    tipoDocumento,
+    apiEndpoint,
+    customEditHandler,
+    customDeleteHandler,
+}) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [selectedRow, setSelectedRow] = useState<any | null>(null);
-    const [isEditModal, setIsEditModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [dataState, setData] = useState<any[]>(data);
+
     const filteredData = dataState.filter((row) => {
         return headers.some((header) => {
             const fieldValue = row[header.key];
@@ -38,7 +55,6 @@ const TableComponent: React.FC<TableComponentProps> = ({ headers, data, itemsPer
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
     const { handleViewPDF, handlePrint, handleEdit, handleDelete, handleSaveEdit, handleSearch, handlePageChange } = createTableHandlers({
@@ -50,12 +66,92 @@ const TableComponent: React.FC<TableComponentProps> = ({ headers, data, itemsPer
         setSearchTerm,
         setCurrentPage,
         setData,
+        apiEndpoint,
+        customEditHandler,
+        customDeleteHandler,
     });
+
+    const renderEditModal = () => {
+        switch (tipoDocumento) {
+            case 'bachiller':
+                return (
+                    <EditModalBachiller
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSave={handleSaveEdit}
+                        data={selectedRow || {}}
+                        errors={validationErrors}
+                    />
+                );
+            case 'academicos':
+                return (
+                    <EditModalBachiller
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSave={handleSaveEdit}
+                        data={selectedRow || {}}
+                        errors={validationErrors}
+                    />
+                );
+
+            case 'resoluciones':
+                return (
+                    <EditModal
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSave={handleSaveEdit}
+                        data={selectedRow || {}}
+                        errors={validationErrors}
+                    />
+                );
+            case 'convenios':
+                return (
+                    <EditConvenios
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSave={handleSaveEdit}
+                        data={selectedRow || {}}
+                        errors={validationErrors}
+                    />
+                );
+            case 'antiAutonomista':
+                return (
+                    <EditAnti
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSave={handleSaveEdit}
+                        data={selectedRow || {}}
+                        errors={validationErrors}
+                    />
+                );
+            case 'autoridades':
+                return (
+                    <EditAutoridad
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSave={handleSaveEdit}
+                        data={selectedRow || {}}
+                        errors={validationErrors}
+                    />
+                );
+            default:
+                return (
+                    <EditModalBachiller
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        onSave={handleSaveEdit}
+                        data={selectedRow || {}}
+                        errors={validationErrors}
+                    />
+                );
+        }
+    };
 
     return (
         <div>
             <Search onSearch={handleSearch} />
             {alert && <CustomAlert message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
+
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -121,13 +217,10 @@ const TableComponent: React.FC<TableComponentProps> = ({ headers, data, itemsPer
             </Table>
 
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
-            <EditModal
-                isOpen={isEditModal}
-                onClose={() => setIsEditModalOpen(false)}
-                onSave={handleSaveEdit}
-                data={selectedRow || {}}
-                errors={validationErrors}
-            />
+
+            {/* Renderizar el modal correspondiente */}
+            {renderEditModal()}
+
             {pdfUrl && <PDFViewerModal fileUrl={pdfUrl} onClose={() => setPdfUrl(null)} />}
         </div>
     );

@@ -1,5 +1,5 @@
-import { AreaBar } from '@/components/charts/AreaBar';
-import { Component } from '@/components/charts/horizontalBar';
+import { DocumentActivityChart } from '@/components/charts/AreaBar';
+import { MonthlyActivityChart } from '@/components/charts/horizontalBar';
 import { PieChart } from '@/components/charts/pieChart';
 import { VerticalBarr } from '@/components/charts/verticalBar';
 import AppLayout from '@/layouts/app-layout';
@@ -21,7 +21,7 @@ export default function Dashboard() {
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     {/* <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border"> */}
                     {/* <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" /> */}
-                    <Component />
+                    <MonthlyActivityChart />
                     {/* </div> */}
                     {/* <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border"> */}
                     {/* <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" /> */}
@@ -34,7 +34,7 @@ export default function Dashboard() {
                 </div>
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
                     {/* <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" /> */}
-                    <AreaBar />
+                    <DocumentActivityChart />
                 </div>
             </div>
         </AppLayout>

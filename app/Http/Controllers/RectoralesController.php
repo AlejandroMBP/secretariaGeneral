@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Documento;
 use App\Models\Resolucion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class RectoralesController extends Controller
@@ -14,7 +15,8 @@ class RectoralesController extends Controller
 
         $resolucion = Resolucion::with([
             'documento.textos:id,documento_id,texto',
-            'documento.tipoDocumentoDetalle'
+            'documento.tipoDocumentoDetalle',
+            'documento.tipoDocumentoDetalle:id,Nombre',
     ])
         ->whereHas('documento.tipoDocumentoDetalle', function($query){
             $query->where('Nombre','RECTORALES');
@@ -23,6 +25,8 @@ class RectoralesController extends Controller
         ->latest()
         ->get()
         ->map(function ($resoluciones) {
+            $documento = $resoluciones->documento;
+            $texto = $documento->textos->first();
             return [
                 'id'                    => $resoluciones->id,
                 'numero_resolucion'     => $resoluciones->numero_resolucion,
@@ -32,6 +36,9 @@ class RectoralesController extends Controller
                 'ruta_de_guardado'      => $resoluciones->documento->ruta_de_guardado ?? null,
                 'documento_id'          => $resoluciones->documento_id,
                 'd_a_documento_id'      => $resoluciones->d_a_documento_id,
+                'texto_id'              => $texto ? $texto->id : null, // ID del texto
+                'texto_contenido'       => $texto ? $texto->texto : null, // Contenido del texto
+                'tipo_documento'        => $documento->tipoDocumentoDetalle->Nombre ?? null
             ];
         });
         return Inertia::render('resoluciones/Rectorales/Listar', [

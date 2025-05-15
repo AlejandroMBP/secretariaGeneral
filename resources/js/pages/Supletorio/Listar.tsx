@@ -22,18 +22,16 @@ export default function Listar() {
     const { documentos } = usePage<Props>().props;
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Bachiller', href: '/Bachiller' }]}>
-            <Head title="Documentos Bachiller" />
+        <AppLayout breadcrumbs={[{ title: 'Supletorios', href: '/Supletorios' }]}>
+            <Head title="Certificados supletorios" />
             <div className="flex flex-col gap-6 p-6">
                 <div className="dark:bg-sidebar rounded-xl bg-white p-6 shadow-md">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestión de Diplomas de Bachiller</h1>
-                    <p className="mt-2 text-gray-600 dark:text-gray-300">
-                        Aquí puedes gestionar y consultar los diplomas de Bachiller de los usuarios.
-                    </p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestión de cetificados supletorios</h1>
+                    <p className="mt-2 text-gray-600 dark:text-gray-300">Aquí puedes gestionar y consultar los certificados supletorios.</p>
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
                     <h2 className="mb-4 text-xl font-bold">Lista de Diplomas Cargados</h2>
-                    <TableComponent headers={bachillerHeaders} data={documentos} />
+                    <TableComponent headers={bachillerHeaders} data={documentos} apiEndpoint="/diplomas-update" tipoDocumento="supletorios" />
                 </div>
             </div>
         </AppLayout>

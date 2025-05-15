@@ -2,7 +2,7 @@ import FormularioCard from '@/components/propios/FOrmularioCard';
 import AppLayout from '@/layouts/app-layout';
 import { DocumentosFormularioProps } from '@/types/interfaces';
 import { Head } from '@inertiajs/react';
-import { Book, FileArchive, FileText, User } from 'lucide-react';
+import { Book, FileArchive, FileText } from 'lucide-react';
 
 export default function DocumentosFormulario(props: DocumentosFormularioProps) {
     return (
@@ -21,12 +21,6 @@ export default function DocumentosFormulario(props: DocumentosFormularioProps) {
                         description="Registrar resoluciones en el sistema."
                         href="/formulario/resoluciones"
                         Icon={FileText}
-                    />
-                    <FormularioCard
-                        title="Formulario de Autoridades"
-                        description="Gestión de personal directivo."
-                        href="/formulario/autoridades"
-                        Icon={User}
                     />
                     <FormularioCard
                         title="Formulario de Diplomas"

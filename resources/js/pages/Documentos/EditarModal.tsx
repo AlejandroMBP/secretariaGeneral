@@ -8,11 +8,11 @@ interface Texto {
 
 interface Documento {
     id: string;
-    id_textos: string;
     nombre_del_documento: string;
     lo_que_resuelve: string;
-    gestion_: string;
-    textos: Texto[];
+    gestion: string;
+    texto_id: string;
+    texto_contenido: string;
 }
 
 interface EditModalProps {
@@ -26,11 +26,11 @@ interface EditModalProps {
 const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, data, errors }) => {
     const [formData, setFormData] = useState<Documento>({
         id: '',
-        id_textos: '',
         nombre_del_documento: '',
         lo_que_resuelve: '',
-        gestion_: '',
-        textos: [{ id: '', texto: '' }],
+        gestion: '',
+        texto_id: '',
+        texto_contenido: '',
     });
 
     const [isSecondModalOpen, setIsSecondModalOpen] = useState(false);
@@ -48,16 +48,11 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, data, er
         if (data) {
             setFormData({
                 id: data.id ?? '',
-                id_textos: data.textos?.[0]?.id ?? '',
                 nombre_del_documento: data.nombre_del_documento ?? '',
                 lo_que_resuelve: data.lo_que_resuelve ?? '',
-                gestion_: data.gestion_ ?? '',
-                textos: [
-                    {
-                        id: data.textos?.[0]?.id ?? '',
-                        texto: data.textos?.[0]?.texto ?? '',
-                    },
-                ],
+                gestion: data.gestion ?? '',
+                texto_id: data.texto_id ?? '',
+                texto_contenido: data.texto_contenido ?? '',
             });
         }
     }, [data]);
@@ -71,17 +66,10 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, data, er
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
 
-        if (name === 'texto') {
-            setFormData((prev) => ({
-                ...prev,
-                textos: [{ ...prev.textos[0], texto: value }],
-            }));
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
-        }
+        setFormData((prev) => ({
+            ...prev,
+            [name === 'texto' ? 'texto_contenido' : name]: value,
+        }));
     };
 
     const handleSave = async () => {
@@ -133,8 +121,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, data, er
                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Gestión</label>
                             <input
                                 type="date"
-                                name="gestion_"
-                                value={formData.gestion_}
+                                name="gestion"
+                                value={formData.gestion}
                                 onChange={handleChange}
                                 className="dark:bg-sidebar w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:focus:ring-blue-700"
                             />
@@ -144,7 +132,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, data, er
                         <div>
                             <textarea
                                 name="texto"
-                                value={formData.textos[0].texto}
+                                value={formData.texto_contenido}
                                 onChange={handleChange}
                                 className="dark:bg-sidebar w-full rounded-lg border border-gray-300 p-4 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:focus:ring-blue-700"
                                 rows={5}
@@ -188,8 +176,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, onSave, data, er
                         <h2 className="mb-4 text-xl font-semibold">Texto Completo del Documento</h2>
                         <textarea
                             ref={textareaRef}
-                            name="texto"
-                            value={formData.textos[0].texto}
+                            name="texto_contenido"
+                            value={formData.texto_contenido}
                             onChange={handleChange}
                             className="dark:bg-sidebar w-full rounded-lg border border-gray-300 p-4 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:focus:ring-blue-700"
                             rows={20}

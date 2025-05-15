@@ -42,7 +42,7 @@ class ArchivosController extends Controller
     }
     public function resoluciones_guardar(Request $request)
     {
-        Log::debug("Datos recibidos", $request->all());
+        // Log::debug("Datos recibidos", $request->all());
 
         $validated = $request->validate(
             [
@@ -89,7 +89,7 @@ class ArchivosController extends Controller
         $documento->usuario_id = Auth::id();
         $documento->save();
 
-        Log::debug('Documento creado con ID: ', ['documento_id' => $documento->id]);
+        // Log::debug('Documento creado con ID: ', ['documento_id' => $documento->id]);
 
         if ($request->texto_extraido) {
             DocumentoTexto::create([
@@ -115,7 +115,7 @@ class ArchivosController extends Controller
             'documento_id' => $documento->id,
         ]);
 
-        Log::debug('Resolución guardada', ['resolucion_id' => $resolucion->id]);
+        // Log::debug('Resolución guardada', ['resolucion_id' => $resolucion->id]);
 
         return response()->json(['message' => 'Resolución guardada exitosamente', 'resolucion' => $resolucion], 201);
     }

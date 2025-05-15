@@ -14,7 +14,11 @@ class AntiAutonomista extends Model
     protected $fillable = [
         'persona', 'nombres', 'apellidos', 'tipoPersona', 'documento_id', 'ci'
     ];
-
+    public static $tiposPersona = [
+        'Docente',
+        'Estudiante',
+        'Administrativo'
+    ];
     public function documento()
     {
         return $this->belongsTo(Documento::class);

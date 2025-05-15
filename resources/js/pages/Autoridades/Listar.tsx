@@ -1,6 +1,9 @@
+import ButtonAction from '@/components/propios/ActionButton';
+import AutoridadFormModal from '@/components/propios/ModalAutoridades';
 import { autoridadesHeaders } from '@/hooks/autoridadesHeaders';
 import AppLayout from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import TableComponent from '../Documentos/TableComponent';
 
 interface Documento {
@@ -21,6 +24,7 @@ interface Props {
 
 export default function Listar() {
     const { documentos } = usePage<Props>().props;
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Autoridades', href: '/Autoridades' }]}>
@@ -33,10 +37,15 @@ export default function Listar() {
                     </p>
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
-                    <h2 className="mb-4 text-xl font-bold">Lista de Documentos Cargados</h2>
-                    <TableComponent headers={autoridadesHeaders} data={documentos} />
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="mb-4 text-xl font-bold">Lista de Documentos Cargados</h2>
+
+                        <ButtonAction onClick={() => setIsModalOpen(true)}>Registrar Autoridad</ButtonAction>
+                    </div>
+                    <TableComponent headers={autoridadesHeaders} data={documentos} apiEndpoint="/Autoridades-update" tipoDocumento="autoridades" />
                 </div>
             </div>
+            <AutoridadFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </AppLayout>
     );
 }

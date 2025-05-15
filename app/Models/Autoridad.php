@@ -20,7 +20,11 @@ class Autoridad extends Model
         'gestion',
         'celular'
     ];
-
+    public static $tipoPosicion = [
+        'HCU',
+        'AGDE',
+        'CONGRESO'
+    ];
     public function documento()
     {
         return $this->belongsTo(Documento::class);

@@ -1,4 +1,3 @@
-import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
 
 export interface Auth {
@@ -22,7 +21,6 @@ export type NavItem = {
     children?: { title: string; href: string; icon?: React.ElementType }[]; // Permitir submenús opcionales
 };
 
-
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -40,4 +38,13 @@ export interface User {
     created_at: string;
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
+}
+export interface PageProps {
+    auth: {
+        user: User;
+    };
+    // Agrega aquí otras props globales que uses en tus páginas
+    monthlyActivity?: Array<{ month: string; total: number }>;
+    currentWeekActivity?: Array<{ day: string; total: number }>;
+    // ... otras props que necesites
 }

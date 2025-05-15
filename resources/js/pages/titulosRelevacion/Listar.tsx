@@ -33,7 +33,7 @@ export default function Listar() {
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
                     <h2 className="mb-4 text-xl font-bold">Lista de títulos profesionales</h2>
-                    <TableComponent headers={bachillerHeaders} data={documentos} />
+                    <TableComponent headers={bachillerHeaders} data={documentos} apiEndpoint="/diplomas-update" tipoDocumento="relevacion" />
                 </div>
             </div>
         </AppLayout>

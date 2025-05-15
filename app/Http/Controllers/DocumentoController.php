@@ -107,8 +107,10 @@ class DocumentoController extends Controller
     }
     public function preprocesarArchivo(Request $request)
     {
-        Log::debug('Archivo recibido para preprocesamiento: ', $request->all());
-
+        // Log::debug('Archivo recibido para preprocesamiento: ', $request->all());
+        $request->validate([
+            'archivo' => 'required|file|mimes:pdf|max:102400'
+        ]);
         if (!$request->hasFile('archivo')) {
             return response()->json(['error' => 'No se recibió ningún archivo.'], 400);
         }
@@ -293,9 +295,9 @@ class DocumentoController extends Controller
 
     public function agregarMarcaDeAgua(Request $request)
     {
+        // Log::debug('ruta:',$request->all());
         $ruta = $request->input('ruta'); // Ruta del PDF original
         $archivo = storage_path("app/public/{$ruta}");
-
         if (!file_exists($archivo)) {
             return response()->json(['error' => 'El archivo no existe.'], 404);
         }

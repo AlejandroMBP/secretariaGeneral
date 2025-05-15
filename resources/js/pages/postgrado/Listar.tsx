@@ -34,7 +34,7 @@ export default function Listar() {
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
                     <h2 className="mb-4 text-xl font-bold">Lista de diplomas de porst grado cargados</h2>
-                    <TableComponent headers={academicosHeaders} data={documentos} />
+                    <TableComponent headers={academicosHeaders} data={documentos} apiEndpoint="/diplomas-update" tipoDocumento="postgrado" />
                 </div>
             </div>
         </AppLayout>
