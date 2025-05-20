@@ -1,6 +1,7 @@
 import { documentHeaders } from '@/hooks/documentHeaders';
 import AppLayout from '@/layouts/app-layout';
 import TableComponent from '@/pages/Documentos/TableComponent';
+import { PageProps } from '@inertiajs/core';
 import { Head, usePage } from '@inertiajs/react';
 
 interface Documento {
@@ -14,7 +15,7 @@ interface Documento {
     ruta: string;
 }
 
-interface Props {
+interface Props extends PageProps {
     documentos: Documento[];
     [key: string]: any;
 }
@@ -29,7 +30,7 @@ export default function Listar() {
                 <div className="dark:bg-sidebar rounded-xl bg-white p-6 shadow-md">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Resoluciones HCU</h1>
                     <p className="mt-2 text-gray-600 dark:text-gray-300">
-                        Aquí puedes gestionar y consultar los documentos relacionados con las resoluciones del HCU (Historial Clínico Universitario).
+                        Aquí puedes gestionar y consultar los documentos relacionados con las resoluciones del HCU.
                     </p>
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">

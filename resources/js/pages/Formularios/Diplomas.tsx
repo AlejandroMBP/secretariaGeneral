@@ -261,12 +261,12 @@ export default function DiplomasFormulario(props: DocumentosFormularioProps) {
                     </button>
 
                     {preprocesado && (
-                        <div className="mt-6 rounded-lg bg-gray-50 p-4 shadow-md dark:bg-gray-700">
+                        <div className="dark:bg-sidebar mt-6 rounded-lg bg-gray-50 p-4 shadow-md">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Resultado del Preprocesamiento</h3>
                             <textarea
                                 value={textoExtraido}
                                 onChange={(e) => setTextoExtraido(e.target.value)}
-                                className="mt-2 w-full rounded-md border border-gray-300 p-3 focus:ring focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                className="mt-2 w-full rounded-md border border-gray-300 p-3 focus:ring focus:ring-blue-500 dark:border-gray-600 dark:bg-blue-950 dark:text-white"
                                 rows={10}
                             />
                             <div className="mt-4 flex gap-4">

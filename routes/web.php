@@ -102,8 +102,9 @@ Route::get('/Consejeros-listar', [ConsejerosController::class, 'listar'])->name(
 
 Route::get('/stats/monthly-activity', [DashboardController::class, 'monthlyActivity']);
 Route::get('/stats/document-activity', [DashboardAreaController::class, 'documentActivity']);
-Route::get('/document-stats', [DashboardPastelController::class, 'getDocumentStats']);
-Route::get('/estadisticas-documentos', [DashboardPastelController::class, 'estadisticas']);
+// Route::get('/document-stats', [DashboardPastelController::class, 'getDocumentStats']);
+Route::get('/document-stats', [DashboardPastelController::class, 'index']);
+Route::get('/visitas-mensuales', [DashboardPastelController::class, 'monthlyVisits']);
 });
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

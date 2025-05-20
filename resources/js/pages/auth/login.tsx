@@ -3,7 +3,6 @@ import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -60,11 +59,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <div className="grid gap-2">
                         <div className="flex items-center">
                             <Label htmlFor="password">Contraseña</Label>
-                            {canResetPassword && (
+                            {/* {canResetPassword && (
                                 <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
                                     olvidaste tu contraseña?
                                 </TextLink>
-                            )}
+                            )} */}
                         </div>
                         <Input
                             id="password"
@@ -74,7 +73,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            placeholder="Password"
+                            placeholder="contraseña"
                         />
                         <InputError message={errors.password} />
                     </div>
@@ -87,7 +86,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             onClick={() => setData('remember', !data.remember)}
                             tabIndex={3}
                         />
-                        <Label htmlFor="remember">Recuerdame</Label>
+                        <Label className="text-white" htmlFor="remember">
+                            Recuerdame
+                        </Label>
                     </div>
 
                     <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
@@ -96,12 +97,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </Button>
                 </div>
 
-                <div className="text-muted-foreground text-center text-sm">
+                {/* <div className="text-muted-foreground text-center text-sm">
                     No tienes una cuenta?{' '}
-                    <TextLink href={route('register')} tabIndex={5}>
+                    <TextLink className="text-white" href={route('register')} tabIndex={5}>
                         Registrate
                     </TextLink>
-                </div>
+                </div> */}
             </form>
             {/* </div> */}
 

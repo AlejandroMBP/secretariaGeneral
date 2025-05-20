@@ -11,86 +11,63 @@ use App\Models\Resolucion;
 use App\Models\TipoDocumento;
 use App\Models\TipoDocumentoDetalle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class DashboardPastelController extends Controller
 {
-    public function getDocumentStats()
-    {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_documentos' => Documento::count(),
-                'documentos_por_tipo' => [
-                    ['name' => 'Resoluciones', 'value' => Resolucion::count(), 'fill' => '#3b82f6'],
-                    ['name' => 'Convenios', 'value' => Convenio::count(), 'fill' => '#10b981'],
-                    ['name' => 'Diplomas', 'value' => Diploma::count(), 'fill' => '#f59e0b'],
-                    ['name' => 'Autoridades', 'value' => Autoridad::count(), 'fill' => '#ef4444'],
-                    ['name' => 'Anti Autonomistas', 'value' => AntiAutonomista::count(), 'fill' => '#8b5cf6'],
-                ],
-                'documentos_generales' => TipoDocumentoDetalle::withCount('documentos')
-                    ->get()
-                    ->map(function($tipo) {
-                        return [
-                            'name' => $tipo->Nombre,
-                            'value' => $tipo->documentos_count,
-                            'fill' => $this->getColorForType($tipo->Nombre)
-                        ];
-                    })
-            ]
-        ]);
-    }
+    public function index()
+    { $resultados = DB::table('documentos')
+        ->join('tipo_documento_detalle', 'documentos.tipo_documento_detalle_id', '=', 'tipo_documento_detalle.id')
+        ->join('tipo_documento', 'tipo_documento_detalle.tipo_documento_id', '=', 'tipo_documento.id')
+        ->select(
+            'tipo_documento.Nombre_tipo as tipo',
+            DB::raw('COUNT(documentos.id) as cantidad'),
+            DB::raw('MAX(documentos.created_at) as ultima_fecha_carga')
+        )
+        ->groupBy('tipo_documento.Nombre_tipo')
+        ->get()
+        ->map(function ($item) {
+            $color = 'hsl(' . rand(0, 360) . ', ' . rand(60, 100) . '%, ' . rand(40, 60) . '%)';
 
-    private function getColorForType($typeName)
-    {
-        $colors = [
-            'Memorandum' => '#6366f1',
-            'Oficio' => '#ec4899',
-            'Informe' => '#14b8a6',
-            'Nota' => '#f97316',
-            'Otros' => '#64748b'
-        ];
-
-        return $colors[$typeName] ?? '#94a3b8';
-    }
-
-    public function estadisticas()
-    {
-        // Obtener todos los tipos de documento con sus detalles
-        $tiposDocumento = TipoDocumento::with(['detalles' => function($query) {
-            $query->withCount('documentos');
-        }])->get();
-
-        // Preparar los datos para la respuesta
-        $estadisticas = [
-            'total_documentos' => Documento::count(),
-            'tipos_documento' => []
-        ];
-
-        foreach ($tiposDocumento as $tipo) {
-            $tipoData = [
-                'nombre_tipo' => $tipo->Nombre_tipo,
-                'total' => 0,
-                'detalles' => []
+            return [
+                'tipo' => $item->tipo,
+                'cantidad' => $item->cantidad,
+                'ultima_fecha_carga' => $item->ultima_fecha_carga,
+                'color' => $color,
             ];
+        });
 
-            foreach ($tipo->detalles as $detalle) {
-                $tipoData['detalles'][] = [
-                    'nombre_detalle' => $detalle->Nombre,
-                    'cantidad' => $detalle->documentos_count
+    Log::debug($resultados);
+
+    return response()->json($resultados);
+    }
+
+    public function monthlyVisits()
+    {
+        $visits = DB::table('system_logs')
+            ->select(
+                DB::raw('MONTHNAME(created_at) as month'),
+                DB::raw('COUNT(*) as visits'),
+                DB::raw('SEC_TO_TIME(AVG(TIME_TO_SEC(duration))) as avg_duration'),
+                DB::raw('COUNT(DISTINCT user_id) as unique_visitors')
+            )
+            ->where('action', 'login')
+            ->whereYear('created_at', now()->year)
+            ->groupBy(DB::raw('MONTH(created_at)'), DB::raw('MONTHNAME(created_at)'))
+            ->orderBy(DB::raw('MONTH(created_at)'))
+            ->get();
+
+        return response()->json(
+            $visits->map(function ($item) {
+                return [
+                    'month' => $item->month,
+                    'visits' => (int)$item->visits,
+                    'avgDuration' => $item->avg_duration,
+                    'uniqueVisitors' => (int)$item->unique_visitors
                 ];
-                $tipoData['total'] += $detalle->documentos_count;
-            }
-
-            $estadisticas['tipos_documento'][] = $tipoData;
-        }
-
-        // Agregar estadísticas de modelos específicos
-        $estadisticas['resoluciones'] = \App\Models\Resolucion::count();
-        $estadisticas['anti_autonomistas'] = \App\Models\AntiAutonomista::count();
-        $estadisticas['diplomas'] = \App\Models\Diploma::count();
-        $estadisticas['autoridades'] = \App\Models\Autoridad::count();
-        $estadisticas['convenios'] = \App\Models\Convenio::count();
-
-        return response()->json($estadisticas);
+            })
+        );
     }
 }

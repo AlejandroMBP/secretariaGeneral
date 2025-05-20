@@ -39,12 +39,12 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
-export interface PageProps {
-    auth: {
-        user: User;
-    };
-    // Agrega aquí otras props globales que uses en tus páginas
-    monthlyActivity?: Array<{ month: string; total: number }>;
-    currentWeekActivity?: Array<{ day: string; total: number }>;
-    // ... otras props que necesites
-}
+// export interface PageProps {
+//     auth: {
+//         user: User;
+//     };
+//     // Agrega aquí otras props globales que uses en tus páginas
+//     monthlyActivity?: Array<{ month: string; total: number }>;
+//     currentWeekActivity?: Array<{ day: string; total: number }>;
+//     // ... otras props que necesites
+// }

@@ -1,9 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import { Documento } from '@/types/interfaces';
+import { PageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { PageProps } from 'react-pdf';
 import { useDebounce } from 'use-debounce';
 
 interface Props extends PageProps {
@@ -81,7 +81,7 @@ export default function BuscarDocumentos() {
                                 className="dark:bg-sidebar w-full rounded-md border border-gray-300 p-2 px-4 py-2 shadow-sm focus:border-indigo-500 focus:outline-none md:w-1/4 dark:border-gray-600 dark:text-white"
                             >
                                 <option value="">Todos los Tipos</option>
-                                {tipos.map((t, idx) => (
+                                {tipos.map((t: any, idx: any) => (
                                     <option key={idx} value={t}>
                                         {t}
                                     </option>
@@ -93,7 +93,7 @@ export default function BuscarDocumentos() {
                                 className="dark:bg-sidebar w-full rounded-md border border-gray-300 p-2 px-4 py-2 shadow-sm focus:border-indigo-500 focus:outline-none md:w-1/4 dark:border-gray-600 dark:text-white"
                             >
                                 <option value="">Todas las Gestiones</option>
-                                {gestiones.map((g, idx) => (
+                                {gestiones.map((g: any, idx: any) => (
                                     <option key={idx} value={g}>
                                         {g}
                                     </option>
@@ -107,7 +107,7 @@ export default function BuscarDocumentos() {
                 {hasSearched ? (
                     documentos.length > 0 ? (
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            {documentos.map((doc) => (
+                            {documentos.map((doc: any) => (
                                 <div
                                     key={doc.id}
                                     className="dark:bg-sidebar rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-300 dark:border-gray-700"

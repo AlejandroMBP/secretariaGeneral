@@ -2,6 +2,7 @@ import ButtonAction from '@/components/propios/ActionButton';
 import AutoridadFormModal from '@/components/propios/ModalAutoridades';
 import { autoridadesHeaders } from '@/hooks/autoridadesHeaders';
 import AppLayout from '@/layouts/app-layout';
+import { PageProps } from '@inertiajs/core';
 import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import TableComponent from '../Documentos/TableComponent';
@@ -17,7 +18,7 @@ interface Documento {
     ruta: string;
 }
 
-interface Props {
+interface Props extends PageProps {
     documentos: Documento[];
     [key: string]: any;
 }

@@ -1,5 +1,6 @@
 import { documentHeaders } from '@/hooks/documentHeaders';
 import AppLayout from '@/layouts/app-layout';
+import { PageProps } from '@inertiajs/core';
 import { Head, usePage } from '@inertiajs/react';
 import TableComponent from './TableComponent';
 
@@ -14,7 +15,7 @@ interface Documento {
     ruta: string;
 }
 
-interface Props {
+interface Props extends PageProps {
     documentos: Documento[];
     [key: string]: any;
 }
@@ -32,7 +33,7 @@ export default function Listar() {
                 </div>
                 <div className="dark:bg-sidebar rounded-lg bg-white p-6 shadow-md dark:text-white">
                     <h2 className="mb-4 text-xl font-bold">Lista de Documentos</h2>
-                    <TableComponent headers={documentHeaders} data={documentos} />
+                    <TableComponent headers={documentHeaders} data={documentos} apiEndpoint="" tipoDocumento="" />
                 </div>
             </div>
         </AppLayout>

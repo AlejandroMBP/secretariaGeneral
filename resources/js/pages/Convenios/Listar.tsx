@@ -1,5 +1,6 @@
 import { convenioHeaders } from '@/hooks/convenioHeaders';
 import AppLayout from '@/layouts/app-layout';
+import { PageProps } from '@inertiajs/core';
 import { Head, usePage } from '@inertiajs/react';
 import TableComponent from '../Documentos/TableComponent';
 
@@ -14,7 +15,7 @@ interface Documento {
     ruta: string;
 }
 
-interface Props {
+interface Props extends PageProps {
     documentos: Documento[];
     [key: string]: any;
 }
